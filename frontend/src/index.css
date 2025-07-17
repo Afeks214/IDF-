@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hebrew RTL Support */
+@layer base {
+  html {
+    direction: rtl;
+    font-family: 'Heebo', 'Arial', 'Tahoma', sans-serif;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    direction: rtl;
+    text-align: right;
+    background-color: #f8fafc;
+    color: #1e293b;
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+}
+
+/* Custom Scrollbar */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+/* Hebrew text optimization */
+@layer components {
+  .hebrew-text {
+    @apply font-hebrew text-right;
+    font-feature-settings: "kern" 1;
+    text-rendering: optimizeLegibility;
+  }
+  
+  .data-cell {
+    @apply px-3 py-2 text-sm border-b border-gray-200;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .data-cell:hover {
+    @apply bg-blue-50;
+  }
+  
+  .data-cell.editing {
+    @apply bg-yellow-50 ring-2 ring-yellow-400;
+  }
+  
+  .table-header {
+    @apply bg-gray-50 font-medium text-gray-900 px-3 py-3 text-sm border-b border-gray-300;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .filter-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm;
+    direction: rtl;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+  }
+  
+  .btn-success {
+    @apply bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2;
+  }
+  
+  .btn-warning {
+    @apply bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+  }
+  
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-200;
+  }
+  
+  .card-body {
+    @apply px-6 py-4;
+  }
+}
+
+/* Excel-like table styling */
+.excel-table {
+  @apply border-collapse border border-gray-300;
+  font-family: 'Heebo', 'Arial', sans-serif;
+  direction: rtl;
+}
+
+.excel-table th,
+.excel-table td {
+  @apply border border-gray-300 px-2 py-1 text-sm;
+  min-width: 80px;
+  max-width: 200px;
+}
+
+.excel-table th {
+  @apply bg-gray-100 font-medium sticky top-0;
+  user-select: none;
+}
+
+.excel-table td {
+  @apply bg-white;
+  position: relative;
+}
+
+.excel-table td:hover {
+  @apply bg-blue-50;
+}
+
+.excel-table td.selected {
+  @apply bg-blue-100 ring-2 ring-blue-400;
+}
+
+.excel-table td.editing {
+  @apply bg-yellow-50 ring-2 ring-yellow-400;
+}

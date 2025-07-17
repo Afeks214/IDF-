@@ -1,0 +1,149 @@
+# IDF Testing Infrastructure - Automated Backup CronJobs
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-scripts
+  namespace: idf-testing
+data:
+  backup-system.sh: |
+    # Include the full backup script content here
+    # (Content from scripts/backup-system.sh)
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-full-backup
+  namespace: idf-testing
+spec:
+  schedule: "0 2 * * 0"  # Weekly full backup at 2 AM Sunday
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: backup
+            type: full
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            fsGroup: 999
+          containers:
+          - name: backup
+            image: postgres:15-alpine
+            command: ["/bin/sh", "/scripts/backup-system.sh", "full"]
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-password
+            - name: S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: backup-config
+                  key: s3-bucket
+                  optional: true
+            volumeMounts:
+            - name: backup-scripts
+              mountPath: /scripts
+            - name: backup-storage
+              mountPath: /backups
+            - name: encryption-key
+              mountPath: /etc/idf
+              readOnly: true
+            resources:
+              requests:
+                memory: "1Gi"
+                cpu: "500m"
+              limits:
+                memory: "2Gi"
+                cpu: "1000m"
+          volumes:
+          - name: backup-scripts
+            configMap:
+              name: backup-scripts
+              defaultMode: 0755
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-pvc
+          - name: encryption-key
+            secret:
+              secretName: backup-encryption-key
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-incremental-backup
+  namespace: idf-testing
+spec:
+  schedule: "0 */6 * * *"  # Every 6 hours
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: backup
+            type: incremental
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            fsGroup: 999
+          containers:
+          - name: backup
+            image: postgres:15-alpine
+            command: ["/bin/sh", "/scripts/backup-system.sh", "incremental"]
+            env:
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-password
+            volumeMounts:
+            - name: backup-scripts
+              mountPath: /scripts
+            - name: backup-storage
+              mountPath: /backups
+            - name: encryption-key
+              mountPath: /etc/idf
+              readOnly: true
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "250m"
+              limits:
+                memory: "1Gi"
+                cpu: "500m"
+          volumes:
+          - name: backup-scripts
+            configMap:
+              name: backup-scripts
+              defaultMode: 0755
+          - name: backup-storage
+            persistentVolumeClaim:
+              claimName: backup-pvc
+          - name: encryption-key
+            secret:
+              secretName: backup-encryption-key
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: idf-testing
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Gi
+  storageClassName: fast-ssd

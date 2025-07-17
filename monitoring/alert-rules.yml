@@ -1,0 +1,249 @@
+# IDF Testing Infrastructure - Alert Rules
+# Military-grade alerting for critical system monitoring
+
+groups:
+  - name: idf.critical
+    interval: 30s
+    rules:
+      # Service Availability
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: sre
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} on instance {{ $labels.instance }} has been down for more than 1 minute."
+          runbook_url: "https://runbooks.idf.mil.il/service-down"
+
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}"
+          runbook_url: "https://runbooks.idf.mil.il/high-error-rate"
+
+      # Database Connection Issues
+      - alert: DatabaseConnectionFailure
+        expr: pg_up == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: dba
+        annotations:
+          summary: "PostgreSQL database is unreachable"
+          description: "PostgreSQL database {{ $labels.instance }} has been unreachable for more than 2 minutes"
+          runbook_url: "https://runbooks.idf.mil.il/database-down"
+
+  - name: idf.performance
+    interval: 60s
+    rules:
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 10m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 85% on {{ $labels.instance }} for more than 10 minutes"
+          runbook_url: "https://runbooks.idf.mil.il/high-cpu"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 90% on {{ $labels.instance }}"
+          runbook_url: "https://runbooks.idf.mil.il/high-memory"
+
+      # Disk Space Low
+      - alert: DiskSpaceLow
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "Disk space is running low"
+          description: "Disk usage is above 80% on {{ $labels.instance }} mount {{ $labels.mountpoint }}"
+          runbook_url: "https://runbooks.idf.mil.il/disk-space"
+
+      # High Response Time
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s for {{ $labels.job }}"
+          runbook_url: "https://runbooks.idf.mil.il/high-latency"
+
+  - name: idf.database
+    interval: 60s
+    rules:
+      # Database Connection Pool Exhaustion
+      - alert: DatabaseConnectionPoolHigh
+        expr: pg_stat_activity_count / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: dba
+        annotations:
+          summary: "Database connection pool usage is high"
+          description: "Database connection pool usage is at {{ $value | humanizePercentage }}"
+          runbook_url: "https://runbooks.idf.mil.il/db-connections"
+
+      # Database Replication Lag
+      - alert: DatabaseReplicationLag
+        expr: pg_replication_lag > 60
+        for: 2m
+        labels:
+          severity: warning
+          team: dba
+        annotations:
+          summary: "Database replication lag is high"
+          description: "Replication lag is {{ $value }} seconds"
+          runbook_url: "https://runbooks.idf.mil.il/replication-lag"
+
+      # Database Backup Failure
+      - alert: DatabaseBackupFailure
+        expr: time() - pg_last_backup_time > 86400
+        for: 1m
+        labels:
+          severity: critical
+          team: dba
+        annotations:
+          summary: "Database backup is overdue"
+          description: "Last successful backup was {{ $value | humanizeDuration }} ago"
+          runbook_url: "https://runbooks.idf.mil.il/backup-failure"
+
+  - name: idf.security
+    interval: 30s
+    rules:
+      # Too Many Failed Login Attempts
+      - alert: HighFailedLoginRate
+        expr: rate(auth_login_failures_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "High failed login rate detected"
+          description: "Failed login rate is {{ $value }} per second"
+          runbook_url: "https://runbooks.idf.mil.il/security-breach"
+
+      # Suspicious User Activity
+      - alert: SuspiciousUserActivity
+        expr: rate(http_requests_total{status="403"}[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Suspicious user activity detected"
+          description: "High rate of 403 responses: {{ $value }} per second"
+          runbook_url: "https://runbooks.idf.mil.il/suspicious-activity"
+
+      # File Upload Anomaly
+      - alert: FileUploadAnomaly
+        expr: rate(file_upload_size_bytes_total[5m]) > 1e9
+        for: 1m
+        labels:
+          severity: warning
+          team: security
+        annotations:
+          summary: "Unusually large file uploads detected"
+          description: "File upload rate is {{ $value | humanizeBytes }}/s"
+          runbook_url: "https://runbooks.idf.mil.il/upload-anomaly"
+
+  - name: idf.kubernetes
+    interval: 60s
+    rules:
+      # Pod Crash Looping
+      - alert: PodCrashLooping
+        expr: rate(kube_pod_container_status_restarts_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "Pod is crash looping"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} is restarting frequently"
+          runbook_url: "https://runbooks.idf.mil.il/pod-crash"
+
+      # Pod Stuck in Pending
+      - alert: PodStuckPending
+        expr: kube_pod_status_phase{phase="Pending"} == 1
+        for: 10m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "Pod stuck in pending state"
+          description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been pending for more than 10 minutes"
+          runbook_url: "https://runbooks.idf.mil.il/pod-pending"
+
+      # Node Not Ready
+      - alert: NodeNotReady
+        expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          team: sre
+        annotations:
+          summary: "Kubernetes node is not ready"
+          description: "Node {{ $labels.node }} has been not ready for more than 5 minutes"
+          runbook_url: "https://runbooks.idf.mil.il/node-not-ready"
+
+      # HPA at Max Replicas
+      - alert: HPAMaxReplicas
+        expr: kube_horizontalpodautoscaler_status_current_replicas == kube_horizontalpodautoscaler_spec_max_replicas
+        for: 15m
+        labels:
+          severity: warning
+          team: sre
+        annotations:
+          summary: "HPA has reached maximum replicas"
+          description: "HPA {{ $labels.horizontalpodautoscaler }} has been at max replicas for 15 minutes"
+          runbook_url: "https://runbooks.idf.mil.il/hpa-max"
+
+  - name: idf.business
+    interval: 300s
+    rules:
+      # Low Request Rate
+      - alert: LowRequestRate
+        expr: rate(http_requests_total[5m]) < 0.1
+        for: 30m
+        labels:
+          severity: info
+          team: product
+        annotations:
+          summary: "Unusually low request rate"
+          description: "Request rate is only {{ $value }} requests per second"
+          runbook_url: "https://runbooks.idf.mil.il/low-traffic"
+
+      # Data Processing Delay
+      - alert: DataProcessingDelay
+        expr: time() - excel_last_processed_timestamp > 3600
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "Data processing is delayed"
+          description: "Last data processing was {{ $value | humanizeDuration }} ago"
+          runbook_url: "https://runbooks.idf.mil.il/processing-delay"

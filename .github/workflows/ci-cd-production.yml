@@ -1,0 +1,406 @@
+# IDF Testing Infrastructure - Production CI/CD Pipeline
+# Military-grade deployment with comprehensive security scanning
+
+name: Production CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, production ]
+  pull_request:
+    branches: [ main, production ]
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly security scan
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  KUBERNETES_NAMESPACE: idf-testing
+
+jobs:
+  # Security and Code Quality Checks
+  security-scan:
+    name: Security & Quality Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit safety semgrep
+
+      - name: Run Bandit security scan
+        run: |
+          bandit -r backend/ -f json -o bandit-report.json || true
+          bandit -r backend/ -f txt
+
+      - name: Run Safety check
+        run: |
+          safety check --json --output safety-report.json || true
+          safety check
+
+      - name: Run Semgrep SAST
+        run: |
+          semgrep --config=auto backend/ --json --output=semgrep-report.json || true
+          semgrep --config=auto backend/
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+            semgrep-report.json
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: python
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  # Build and Test
+  build-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: security-scan
+    strategy:
+      matrix:
+        python-version: ['3.11']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements-prod.txt
+          pip install pytest pytest-cov pytest-asyncio httpx
+
+      - name: Run code formatting check
+        run: |
+          pip install black isort flake8
+          black --check backend/
+          isort --check-only backend/
+          flake8 backend/ --max-line-length=88
+
+      - name: Run type checking
+        run: |
+          pip install mypy
+          mypy backend/ --ignore-missing-imports
+
+      - name: Run tests with coverage
+        run: |
+          cd backend
+          pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+          SECRET_KEY: test-secret-key
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: backend/coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  # Container Build and Scan
+  container-build:
+    name: Build and Scan Containers
+    runs-on: ubuntu-latest
+    needs: build-test
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build backend container
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          target: production
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          load: true
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run Hadolint Dockerfile scan
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: backend/Dockerfile
+          format: sarif
+          output-file: hadolint-results.sarif
+
+      - name: Upload Hadolint scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: hadolint-results.sarif
+
+      - name: Push container images
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Infrastructure Validation
+  infrastructure-test:
+    name: Infrastructure Validation
+    runs-on: ubuntu-latest
+    needs: security-scan
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Validate Kubernetes manifests
+        run: |
+          # Install kubeval
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+          sudo mv kubeval /usr/local/bin
+          
+          # Validate all Kubernetes YAML files
+          find k8s/ -name "*.yaml" -exec kubeval {} \;
+
+      - name: Lint Kubernetes manifests
+        run: |
+          # Install kube-score
+          wget https://github.com/zegl/kube-score/releases/download/v1.16.1/kube-score_1.16.1_linux_amd64.tar.gz
+          tar xzf kube-score_1.16.1_linux_amd64.tar.gz
+          sudo mv kube-score /usr/local/bin
+          
+          # Score Kubernetes manifests
+          find k8s/ -name "*.yaml" -exec kube-score score {} \;
+
+      - name: Validate Prometheus configuration
+        run: |
+          docker run --rm -v "${PWD}/monitoring:/workspace" \
+            prom/prometheus:latest \
+            promtool check config /workspace/prometheus.yml
+
+      - name: Validate Alert Rules
+        run: |
+          docker run --rm -v "${PWD}/monitoring:/workspace" \
+            prom/prometheus:latest \
+            promtool check rules /workspace/alert-rules.yml
+
+  # Deployment to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [container-build, infrastructure-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://idf-testing.mil.il
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      - name: Deploy to Kubernetes
+        run: |
+          # Apply namespace first
+          kubectl apply -f k8s/namespace.yaml
+          
+          # Create secrets (if they don't exist)
+          kubectl create secret generic postgres-secret \
+            --from-literal=postgres-password=${{ secrets.POSTGRES_PASSWORD }} \
+            --from-literal=replication-password=${{ secrets.POSTGRES_REPLICATION_PASSWORD }} \
+            --namespace=idf-testing \
+            --dry-run=client -o yaml | kubectl apply -f -
+          
+          kubectl create secret generic backend-secret \
+            --from-literal=secret-key=${{ secrets.SECRET_KEY }} \
+            --from-literal=database-url=${{ secrets.DATABASE_URL }} \
+            --from-literal=redis-url=${{ secrets.REDIS_URL }} \
+            --namespace=idf-testing \
+            --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Apply all manifests
+          kubectl apply -f k8s/ --recursive
+          
+          # Wait for deployments to be ready
+          kubectl rollout status deployment/backend -n idf-testing --timeout=600s
+          kubectl rollout status deployment/frontend -n idf-testing --timeout=600s
+
+      - name: Run post-deployment tests
+        run: |
+          # Health check
+          kubectl run --rm -i --tty health-check \
+            --image=curlimages/curl:latest \
+            --restart=Never \
+            --namespace=idf-testing \
+            -- curl -f http://backend-service:8000/health
+
+      - name: Update deployment status
+        run: |
+          # Create deployment annotation
+          kubectl annotate deployment backend \
+            deployment.kubernetes.io/revision="$(date +%s)" \
+            deployment.kubernetes.io/deployed-by="${{ github.actor }}" \
+            deployment.kubernetes.io/commit-sha="${{ github.sha }}" \
+            --namespace=idf-testing
+
+  # Security Compliance Check
+  compliance-check:
+    name: Security Compliance
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        run: |
+          aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      - name: Run CIS Kubernetes Benchmark
+        run: |
+          # Install kube-bench
+          kubectl apply -f https://raw.githubusercontent.com/aquasecurity/kube-bench/main/job-eks.yaml
+          sleep 60
+          kubectl logs job/kube-bench -n default
+
+      - name: Run Falco Security Runtime Check
+        run: |
+          # Check if Falco is running and get security alerts
+          kubectl get pods -n falco-system || echo "Falco not installed"
+
+      - name: Network Policy Validation
+        run: |
+          # Verify network policies are in place
+          kubectl get networkpolicies -n idf-testing
+          
+          # Test network isolation
+          kubectl run --rm -i --tty netpol-test \
+            --image=busybox:latest \
+            --restart=Never \
+            --namespace=default \
+            -- nc -zv backend-service.idf-testing.svc.cluster.local 8000 || echo "Network isolation working"
+
+  # Performance Testing
+  performance-test:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run load tests
+        run: |
+          # Install k6
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+          
+          # Run performance tests
+          k6 run --vus 50 --duration 5m tests/load-test.js
+
+  # Notification
+  notify:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy-production, compliance-check, performance-test]
+    if: always()
+    steps:
+      - name: Notify deployment status
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#idf-deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow

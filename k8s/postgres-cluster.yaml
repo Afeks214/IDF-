@@ -1,0 +1,135 @@
+# IDF Testing Infrastructure - PostgreSQL Cluster
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: idf-testing
+data:
+  postgresql.conf: |
+    listen_addresses = '*'
+    max_connections = 200
+    shared_buffers = 512MB
+    effective_cache_size = 1536MB
+    maintenance_work_mem = 128MB
+    checkpoint_completion_target = 0.9
+    wal_buffers = 16MB
+    default_statistics_target = 100
+    random_page_cost = 1.1
+    effective_io_concurrency = 200
+    work_mem = 2621kB
+    min_wal_size = 1GB
+    max_wal_size = 4GB
+    max_worker_processes = 8
+    max_parallel_workers_per_gather = 4
+    max_parallel_workers = 8
+    max_parallel_maintenance_workers = 4
+    # Replication settings
+    wal_level = replica
+    hot_standby = on
+    max_wal_senders = 10
+    max_replication_slots = 10
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: idf-testing
+type: Opaque
+data:
+  postgres-password: # Base64 encoded password
+  replication-password: # Base64 encoded replication password
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-primary
+  namespace: idf-testing
+spec:
+  serviceName: postgres-primary
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-primary
+  template:
+    metadata:
+      labels:
+        app: postgres-primary
+    spec:
+      securityContext:
+        fsGroup: 999
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        env:
+        - name: POSTGRES_DB
+          value: "idf_testing"
+        - name: POSTGRES_USER
+          value: "idf_user"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-password
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - idf_user
+            - -d
+            - idf_testing
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - idf_user
+            - -d
+            - idf_testing
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+      volumes:
+      - name: postgres-config
+        configMap:
+          name: postgres-config
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 100Gi
+      storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-primary
+  namespace: idf-testing
+spec:
+  selector:
+    app: postgres-primary
+  ports:
+  - port: 5432
+    targetPort: 5432
+  type: ClusterIP

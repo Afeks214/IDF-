@@ -1,0 +1,158 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database with Hebrew UTF-8 Support
+  postgres:
+    image: postgres:15-alpine
+    container_name: idf_postgres
+    environment:
+      POSTGRES_DB: idf_testing
+      POSTGRES_USER: idf_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password_change_in_production}
+      POSTGRES_INITDB_ARGS: "--locale=he_IL.UTF-8 --encoding=UTF8 --lc-collate=he_IL.UTF-8 --lc-ctype=he_IL.UTF-8"
+      LANG: he_IL.UTF-8
+      LC_ALL: he_IL.UTF-8
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U idf_user -d idf_testing"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - idf_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: idf_redis
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-dev_redis_password}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - idf_network
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: idf_backend
+    environment:
+      DATABASE_URL: postgresql://idf_user:${POSTGRES_PASSWORD:-dev_password_change_in_production}@postgres:5432/idf_testing
+      REDIS_URL: redis://:${REDIS_PASSWORD:-dev_redis_password}@redis:6379
+      SECRET_KEY: ${SECRET_KEY:-dev_secret_key_change_in_production}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-true}
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./backend:/app
+      - uploaded_files:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - idf_network
+    restart: unless-stopped
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: idf_frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:8001/api/v1
+      REACT_APP_ENVIRONMENT: ${ENVIRONMENT:-development}
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - idf_network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: idf_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - production
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: idf_prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: idf_grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+    ports:
+      - "3002:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploaded_files:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  idf_network:
+    driver: bridge

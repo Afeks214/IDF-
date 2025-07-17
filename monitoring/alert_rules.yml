@@ -1,0 +1,370 @@
+# IDF Testing Infrastructure - Prometheus Alert Rules
+# Performance monitoring and alerting configuration
+
+groups:
+  - name: idf_application_alerts
+    rules:
+      # High response time alerts
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 2m
+        labels:
+          severity: warning
+          service: idf-backend
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s for the last 5 minutes"
+
+      - alert: VeryHighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 5
+        for: 1m
+        labels:
+          severity: critical
+          service: idf-backend
+        annotations:
+          summary: "Very high response time detected"
+          description: "95th percentile response time is {{ $value }}s for the last 5 minutes"
+
+      # Error rate alerts
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status_code=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: idf-backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+
+      - alert: VeryHighErrorRate
+        expr: rate(http_requests_total{status_code=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.20
+        for: 1m
+        labels:
+          severity: critical
+          service: idf-backend
+        annotations:
+          summary: "Very high error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+
+      # Memory usage alerts
+      - alert: HighMemoryUsage
+        expr: system_memory_usage_bytes / 1024 / 1024 / 1024 > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: idf-backend
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanize }}GB"
+
+      - alert: VeryHighMemoryUsage
+        expr: system_memory_usage_bytes / 1024 / 1024 / 1024 > 4
+        for: 2m
+        labels:
+          severity: critical
+          service: idf-backend
+        annotations:
+          summary: "Very high memory usage detected"
+          description: "Memory usage is {{ $value | humanize }}GB"
+
+      # CPU usage alerts
+      - alert: HighCPUUsage
+        expr: system_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: idf-backend
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}% for the last 5 minutes"
+
+      - alert: VeryHighCPUUsage
+        expr: system_cpu_usage_percent > 95
+        for: 1m
+        labels:
+          severity: critical
+          service: idf-backend
+        annotations:
+          summary: "Very high CPU usage detected"
+          description: "CPU usage is {{ $value }}% for the last 1 minute"
+
+  - name: idf_database_alerts
+    rules:
+      # Database connection alerts
+      - alert: HighDatabaseConnections
+        expr: db_connections_active > 80
+        for: 3m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "High database connection count"
+          description: "Active database connections: {{ $value }}"
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: db_connections_active > 95
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "Active database connections: {{ $value }}"
+
+      # Database query performance
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m])) > 1
+        for: 3m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "95th percentile query time is {{ $value }}s"
+
+      - alert: VerySlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m])) > 5
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "Very slow database queries detected"
+          description: "95th percentile query time is {{ $value }}s"
+
+      # Database errors
+      - alert: DatabaseErrorRate
+        expr: rate(db_queries_total{status="error"}[5m]) / rate(db_queries_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "High database error rate"
+          description: "Database error rate is {{ $value | humanizePercentage }}"
+
+  - name: idf_cache_alerts
+    rules:
+      # Cache hit rate alerts
+      - alert: LowCacheHitRate
+        expr: cache_hit_ratio < 0.70
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }}"
+
+      - alert: VeryLowCacheHitRate
+        expr: cache_hit_ratio < 0.50
+        for: 2m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Very low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }}"
+
+      # Cache operation performance
+      - alert: SlowCacheOperations
+        expr: histogram_quantile(0.95, rate(cache_operation_duration_seconds_bucket[5m])) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Slow cache operations detected"
+          description: "95th percentile cache operation time is {{ $value }}s"
+
+  - name: idf_hebrew_processing_alerts
+    rules:
+      # Hebrew text processing performance
+      - alert: SlowHebrewProcessing
+        expr: histogram_quantile(0.95, rate(hebrew_text_processing_duration_seconds_bucket[5m])) > 0.5
+        for: 3m
+        labels:
+          severity: warning
+          service: idf-backend
+          component: hebrew-processing
+        annotations:
+          summary: "Slow Hebrew text processing"
+          description: "95th percentile Hebrew processing time is {{ $value }}s"
+
+      - alert: VerySlowHebrewProcessing
+        expr: histogram_quantile(0.95, rate(hebrew_text_processing_duration_seconds_bucket[5m])) > 2
+        for: 1m
+        labels:
+          severity: critical
+          service: idf-backend
+          component: hebrew-processing
+        annotations:
+          summary: "Very slow Hebrew text processing"
+          description: "95th percentile Hebrew processing time is {{ $value }}s"
+
+      # Data validation errors
+      - alert: HighDataValidationErrors
+        expr: rate(data_validation_errors_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: idf-backend
+          component: data-validation
+        annotations:
+          summary: "High data validation error rate"
+          description: "Data validation errors: {{ $value }} per second"
+
+      # File upload issues
+      - alert: LargeFileUploads
+        expr: histogram_quantile(0.95, rate(file_upload_size_bytes_bucket[10m])) > 100000000
+        for: 5m
+        labels:
+          severity: warning
+          service: idf-backend
+          component: file-upload
+        annotations:
+          summary: "Large file uploads detected"
+          description: "95th percentile file upload size is {{ $value | humanize1024 }}B"
+
+  - name: idf_infrastructure_alerts
+    rules:
+      # Service availability
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "Service is down"
+          description: "Service {{ $labels.job }} has been down for more than 1 minute"
+
+      # Disk space alerts
+      - alert: LowDiskSpace
+        expr: (system_disk_usage_bytes / 1024 / 1024 / 1024) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is {{ $value | humanize }}GB on {{ $labels.mountpoint }}"
+
+      - alert: VeryLowDiskSpace
+        expr: (system_disk_usage_bytes / 1024 / 1024 / 1024) > 90
+        for: 2m
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "Very low disk space"
+          description: "Disk usage is {{ $value | humanize }}GB on {{ $labels.mountpoint }}"
+
+      # Container restart alerts
+      - alert: ContainerRestarts
+        expr: increase(container_restart_count_total[1h]) > 5
+        for: 1m
+        labels:
+          severity: warning
+          service: "{{ $labels.container }}"
+        annotations:
+          summary: "High container restart rate"
+          description: "Container {{ $labels.container }} has restarted {{ $value }} times in the last hour"
+
+  - name: idf_business_logic_alerts
+    rules:
+      # Active user monitoring
+      - alert: NoActiveUsers
+        expr: active_users == 0
+        for: 10m
+        labels:
+          severity: warning
+          service: idf-backend
+          component: users
+        annotations:
+          summary: "No active users detected"
+          description: "No active users for the last 10 minutes"
+
+      # Excel processing alerts
+      - alert: SlowExcelProcessing
+        expr: histogram_quantile(0.95, rate(excel_processing_duration_seconds_bucket[10m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+          service: idf-backend
+          component: excel-processing
+        annotations:
+          summary: "Slow Excel file processing"
+          description: "95th percentile Excel processing time is {{ $value }}s"
+
+      - alert: VerySlowExcelProcessing
+        expr: histogram_quantile(0.95, rate(excel_processing_duration_seconds_bucket[10m])) > 120
+        for: 2m
+        labels:
+          severity: critical
+          service: idf-backend
+          component: excel-processing
+        annotations:
+          summary: "Very slow Excel file processing"
+          description: "95th percentile Excel processing time is {{ $value }}s"
+
+  - name: idf_security_alerts
+    rules:
+      # Suspicious activity patterns
+      - alert: HighFailedLoginRate
+        expr: rate(http_requests_total{endpoint="/api/v1/auth/login", status_code="401"}[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: idf-backend
+          component: security
+        annotations:
+          summary: "High failed login rate"
+          description: "Failed login rate: {{ $value }} per second"
+
+      - alert: UnusualTrafficPattern
+        expr: rate(http_requests_total[5m]) > 100
+        for: 3m
+        labels:
+          severity: warning
+          service: idf-backend
+          component: security
+        annotations:
+          summary: "Unusual traffic pattern detected"
+          description: "Request rate: {{ $value }} per second (unusual for this service)"
+
+  - name: idf_performance_regression_alerts
+    rules:
+      # Performance regression detection
+      - alert: ResponseTimeRegression
+        expr: |
+          (
+            histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) 
+            / 
+            histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[1h] offset 1d))
+          ) > 1.5
+        for: 5m
+        labels:
+          severity: warning
+          service: idf-backend
+          component: performance
+        annotations:
+          summary: "Performance regression detected"
+          description: "Response time is 50% slower than yesterday's baseline"
+
+      # Memory usage regression
+      - alert: MemoryUsageRegression
+        expr: |
+          (
+            avg_over_time(system_memory_usage_bytes[5m])
+            /
+            avg_over_time(system_memory_usage_bytes[1h] offset 1d)
+          ) > 1.3
+        for: 10m
+        labels:
+          severity: warning
+          service: idf-backend
+          component: performance
+        annotations:
+          summary: "Memory usage regression detected"
+          description: "Memory usage is 30% higher than yesterday's baseline"

@@ -1,0 +1,485 @@
+name: IDF Testing Infrastructure - CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+  schedule:
+    # Daily performance tests at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: idf-testing-infrastructure
+
+jobs:
+  # Security and dependency scanning
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Python Security Scan
+        run: |
+          pip install bandit safety
+          bandit -r backend/ -f json -o bandit-report.json || true
+          safety check --json --output safety-report.json || true
+
+      - name: Node.js Security Scan
+        working-directory: ./frontend
+        run: |
+          npm audit --audit-level high --json > npm-audit.json || true
+
+  # Code quality and linting
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Python dependencies
+        run: |
+          pip install black isort flake8 mypy bandit
+          pip install -r backend/requirements.txt
+
+      - name: Python Code Formatting Check
+        run: |
+          black --check backend/
+          isort --check-only backend/
+
+      - name: Python Linting
+        run: |
+          flake8 backend/ --max-line-length=88 --extend-ignore=E203,W503
+          mypy backend/ --ignore-missing-imports
+
+      - name: Install Frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Frontend Linting
+        working-directory: ./frontend
+        run: |
+          npm run lint
+          npm run type-check
+
+      - name: Hebrew Text Validation
+        run: |
+          python -c "
+          import sys
+          import os
+          hebrew_files = []
+          for root, dirs, files in os.walk('.'):
+              for file in files:
+                  if file.endswith(('.py', '.js', '.jsx', '.ts', '.tsx')):
+                      filepath = os.path.join(root, file)
+                      try:
+                          with open(filepath, 'r', encoding='utf-8') as f:
+                              content = f.read()
+                              if any(ord(char) >= 0x0590 and ord(char) <= 0x05FF for char in content):
+                                  hebrew_files.append(filepath)
+                      except:
+                          pass
+          if hebrew_files:
+              print(f'Found {len(hebrew_files)} files with Hebrew content')
+              for file in hebrew_files[:10]:  # Show first 10
+                  print(f'  - {file}')
+          "
+
+  # Backend testing
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: test_idf
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-asyncio pytest-cov pytest-mock
+
+      - name: Run unit tests
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_idf
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test_secret_key_for_testing_only_32_chars
+          ENVIRONMENT: testing
+        run: |
+          cd backend
+          pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+          
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: backend/coverage.xml
+          flags: backend
+
+      - name: Performance Tests
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_idf
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test_secret_key_for_testing_only_32_chars
+          ENVIRONMENT: testing
+        run: |
+          cd backend
+          pytest tests/test_performance.py -v -m performance --tb=short
+
+      - name: Hebrew Processing Tests
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_idf
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test_secret_key_for_testing_only_32_chars
+          ENVIRONMENT: testing
+        run: |
+          cd backend
+          pytest tests/ -v -m hebrew --tb=short
+
+  # Frontend testing
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache Node.js dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run unit tests
+        working-directory: ./frontend
+        run: npm run test:coverage
+
+      - name: Run E2E tests
+        working-directory: ./frontend
+        run: npm run test:e2e:headless
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          directory: frontend/coverage
+          flags: frontend
+
+      - name: Bundle size analysis
+        working-directory: ./frontend
+        run: |
+          npm run build
+          npm run analyze:size
+
+      - name: Performance audit
+        working-directory: ./frontend
+        run: npm run lighthouse:ci
+
+  # Integration testing
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: test_idf
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build application stack
+        run: |
+          docker-compose -f docker-compose.yml build backend frontend
+
+      - name: Start integration test environment
+        run: |
+          docker-compose -f docker-compose.yml up -d
+
+      - name: Wait for services
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:8000/health; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+
+      - name: Run integration tests
+        run: |
+          docker-compose exec -T backend pytest tests/ -m integration -v
+
+      - name: Stop services
+        if: always()
+        run: docker-compose down
+
+  # Load testing (only on main branch and scheduled runs)
+  load-testing:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    if: github.ref == 'refs/heads/main' || github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Locust
+        run: pip install locust
+
+      - name: Start test environment
+        run: docker-compose up -d
+
+      - name: Wait for services
+        run: |
+          timeout 120 bash -c 'until curl -f http://localhost:8000/health; do sleep 5; done'
+
+      - name: Run load tests
+        run: |
+          cd backend/tests/load_testing
+          python load_test_runner.py --host http://localhost:8000 --users 50 --duration 3m
+
+      - name: Upload load test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: load-test-results
+          path: backend/tests/load_testing/*.json
+
+      - name: Stop test environment
+        if: always()
+        run: docker-compose down
+
+  # Build and push Docker images
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    needs: [security-scan, code-quality, backend-tests, frontend-tests]
+    if: github.event_name == 'push'
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push backend image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}-backend
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}-frontend
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Deploy to staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment"
+          # Add actual deployment steps here
+          # kubectl apply -f k8s/staging/
+          # helm upgrade --install idf-staging ./charts/idf
+
+  # Deploy to production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-push, integration-tests]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment"
+          # Add actual deployment steps here
+          # kubectl apply -f k8s/production/
+          # helm upgrade --install idf-production ./charts/idf
+
+      - name: Run post-deployment tests
+        run: |
+          echo "Running post-deployment health checks"
+          # Add health check scripts here
+
+  # Performance monitoring and alerting
+  post-deployment-monitoring:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Trigger performance monitoring
+        run: |
+          echo "Setting up performance monitoring alerts"
+          # Configure monitoring alerts
+          # Update Grafana dashboards
+          # Send deployment notification
+
+      - name: Performance regression check
+        run: |
+          echo "Checking for performance regressions"
+          # Compare current metrics with baseline
+          # Alert if performance degraded
+
+  # Cleanup and notifications
+  cleanup:
+    name: Cleanup and Notify
+    runs-on: ubuntu-latest
+    needs: [deploy-production, post-deployment-monitoring]
+    if: always()
+    steps:
+      - name: Clean up artifacts
+        run: |
+          echo "Cleaning up temporary artifacts"
+
+      - name: Send notification
+        if: failure()
+        run: |
+          echo "Pipeline failed - sending notifications"
+          # Send Slack/Teams notification
+          # Create GitHub issue for failures
+
+      - name: Update deployment status
+        if: success()
+        run: |
+          echo "Deployment successful - updating status"
+          # Update deployment dashboard
+          # Send success notification

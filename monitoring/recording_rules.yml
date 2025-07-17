@@ -1,0 +1,237 @@
+# IDF Testing Infrastructure - Prometheus Recording Rules
+# Pre-computed metrics for performance optimization
+
+groups:
+  - name: idf_performance_recording_rules
+    interval: 30s
+    rules:
+      # HTTP Request Rate Rules
+      - record: idf:http_request_rate_5m
+        expr: rate(http_requests_total[5m])
+
+      - record: idf:http_request_rate_1h
+        expr: rate(http_requests_total[1h])
+
+      - record: idf:http_error_rate_5m
+        expr: rate(http_requests_total{status_code=~"5.."}[5m]) / rate(http_requests_total[5m])
+
+      # Response Time Rules
+      - record: idf:http_response_time_p50_5m
+        expr: histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))
+
+      - record: idf:http_response_time_p95_5m
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+
+      - record: idf:http_response_time_p99_5m
+        expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
+
+      # System Resource Rules
+      - record: idf:cpu_usage_avg_5m
+        expr: avg_over_time(system_cpu_usage_percent[5m])
+
+      - record: idf:memory_usage_avg_5m
+        expr: avg_over_time(system_memory_usage_bytes[5m])
+
+      - record: idf:memory_usage_gb
+        expr: system_memory_usage_bytes / 1024 / 1024 / 1024
+
+  - name: idf_database_recording_rules
+    interval: 30s
+    rules:
+      # Database Query Performance
+      - record: idf:db_query_rate_5m
+        expr: rate(db_queries_total[5m])
+
+      - record: idf:db_query_error_rate_5m
+        expr: rate(db_queries_total{status="error"}[5m]) / rate(db_queries_total[5m])
+
+      - record: idf:db_query_duration_p50_5m
+        expr: histogram_quantile(0.50, rate(db_query_duration_seconds_bucket[5m]))
+
+      - record: idf:db_query_duration_p95_5m
+        expr: histogram_quantile(0.95, rate(db_query_duration_seconds_bucket[5m]))
+
+      # Database Connection Metrics
+      - record: idf:db_connections_utilization
+        expr: db_connections_active / 100  # Assuming max 100 connections
+
+  - name: idf_cache_recording_rules
+    interval: 30s
+    rules:
+      # Cache Performance Metrics
+      - record: idf:cache_hit_rate_5m
+        expr: |
+          rate(cache_operations_total{result="hit"}[5m]) /
+          (rate(cache_operations_total{result="hit"}[5m]) + rate(cache_operations_total{result="miss"}[5m]))
+
+      - record: idf:cache_operation_rate_5m
+        expr: rate(cache_operations_total[5m])
+
+      - record: idf:cache_operation_duration_p95_5m
+        expr: histogram_quantile(0.95, rate(cache_operation_duration_seconds_bucket[5m]))
+
+  - name: idf_hebrew_processing_recording_rules
+    interval: 60s
+    rules:
+      # Hebrew Text Processing Metrics
+      - record: idf:hebrew_processing_rate_5m
+        expr: rate(hebrew_text_processing_duration_seconds_count[5m])
+
+      - record: idf:hebrew_processing_duration_p95_5m
+        expr: histogram_quantile(0.95, rate(hebrew_text_processing_duration_seconds_bucket[5m]))
+
+      - record: idf:data_validation_error_rate_5m
+        expr: rate(data_validation_errors_total[5m])
+
+      # File Upload Metrics
+      - record: idf:file_upload_rate_10m
+        expr: rate(file_upload_size_bytes_count[10m])
+
+      - record: idf:file_upload_size_p95_10m
+        expr: histogram_quantile(0.95, rate(file_upload_size_bytes_bucket[10m]))
+
+      - record: idf:excel_processing_duration_p95_10m
+        expr: histogram_quantile(0.95, rate(excel_processing_duration_seconds_bucket[10m]))
+
+  - name: idf_business_metrics_recording_rules
+    interval: 60s
+    rules:
+      # Business Logic Metrics
+      - record: idf:active_users_avg_5m
+        expr: avg_over_time(active_users[5m])
+
+      # Endpoint-specific metrics
+      - record: idf:health_check_success_rate_5m
+        expr: |
+          rate(http_requests_total{endpoint="/health", status_code="200"}[5m]) /
+          rate(http_requests_total{endpoint="/health"}[5m])
+
+      - record: idf:api_requests_per_user_5m
+        expr: rate(http_requests_total{endpoint=~"/api/v1/.*"}[5m]) / avg_over_time(active_users[5m])
+
+  - name: idf_sla_recording_rules
+    interval: 300s  # 5 minutes
+    rules:
+      # SLA Metrics for reporting
+      - record: idf:sla_availability_5m
+        expr: |
+          (rate(http_requests_total{status_code!~"5.."}[5m]) + rate(http_requests_total{status_code="200"}[5m])) /
+          rate(http_requests_total[5m])
+
+      - record: idf:sla_response_time_compliance_5m
+        expr: |
+          (
+            rate(http_request_duration_seconds_bucket{le="2.0"}[5m]) /
+            rate(http_request_duration_seconds_count[5m])
+          ) * 100
+
+      - record: idf:sla_error_budget_burn_rate_1h
+        expr: |
+          (
+            rate(http_requests_total{status_code=~"5.."}[1h]) /
+            rate(http_requests_total[1h])
+          ) / 0.001  # Assuming 99.9% SLA (0.1% error budget)
+
+  - name: idf_capacity_planning_recording_rules
+    interval: 300s  # 5 minutes
+    rules:
+      # Capacity Planning Metrics
+      - record: idf:resource_utilization_score
+        expr: |
+          (
+            (system_cpu_usage_percent / 100) * 0.4 +
+            (system_memory_usage_bytes / (8 * 1024 * 1024 * 1024)) * 0.4 +  # Assuming 8GB max
+            (db_connections_active / 100) * 0.2  # Assuming 100 max connections
+          )
+
+      - record: idf:requests_per_cpu_percent
+        expr: rate(http_requests_total[5m]) / system_cpu_usage_percent
+
+      - record: idf:requests_per_memory_gb
+        expr: rate(http_requests_total[5m]) / (system_memory_usage_bytes / 1024 / 1024 / 1024)
+
+  - name: idf_trend_analysis_recording_rules
+    interval: 900s  # 15 minutes
+    rules:
+      # Trend Analysis (comparing current vs historical)
+      - record: idf:response_time_trend_24h
+        expr: |
+          increase(
+            histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[15m]))
+          )[24h:15m]
+
+      - record: idf:error_rate_trend_24h
+        expr: |
+          increase(
+            rate(http_requests_total{status_code=~"5.."}[15m]) / rate(http_requests_total[15m])
+          )[24h:15m]
+
+      - record: idf:throughput_trend_24h
+        expr: increase(rate(http_requests_total[15m]))[24h:15m]
+
+  - name: idf_alert_aggregation_recording_rules
+    interval: 60s
+    rules:
+      # Aggregated metrics for alerting
+      - record: idf:service_health_score
+        expr: |
+          (
+            (idf:sla_availability_5m / 100) * 0.4 +
+            (1 - idf:http_error_rate_5m) * 0.3 +
+            (1 - (idf:http_response_time_p95_5m / 10)) * 0.3  # Normalize to 10s max
+          ) * 100
+
+      - record: idf:performance_score
+        expr: |
+          (
+            (1 - (idf:http_response_time_p95_5m / 5)) * 0.5 +  # Normalize to 5s max
+            (idf:cache_hit_rate_5m) * 0.3 +
+            (1 - (idf:db_query_duration_p95_5m / 2)) * 0.2  # Normalize to 2s max
+          ) * 100
+
+      - record: idf:hebrew_processing_health_score
+        expr: |
+          (
+            (1 - (idf:hebrew_processing_duration_p95_5m / 1)) * 0.6 +  # Normalize to 1s max
+            (1 - (idf:data_validation_error_rate_5m / 10)) * 0.4  # Normalize to 10 errors/sec max
+          ) * 100
+
+  - name: idf_cost_optimization_recording_rules
+    interval: 3600s  # 1 hour
+    rules:
+      # Cost optimization metrics
+      - record: idf:resource_efficiency_score
+        expr: |
+          (
+            rate(http_requests_total[1h]) / 
+            (
+              avg_over_time(system_cpu_usage_percent[1h]) / 100 *
+              avg_over_time(system_memory_usage_bytes[1h]) / (1024 * 1024 * 1024)
+            )
+          )
+
+      - record: idf:cache_cost_effectiveness
+        expr: |
+          (
+            idf:cache_hit_rate_5m * 
+            rate(cache_operations_total[1h])
+          ) / avg_over_time(system_memory_usage_bytes[1h])
+
+  - name: idf_user_experience_recording_rules
+    interval: 300s  # 5 minutes
+    rules:
+      # User Experience Metrics
+      - record: idf:user_experience_score
+        expr: |
+          (
+            (1 - (idf:http_response_time_p95_5m / 3)) * 0.5 +  # Normalize to 3s max
+            (1 - idf:http_error_rate_5m) * 0.3 +
+            (idf:sla_availability_5m / 100) * 0.2
+          ) * 100
+
+      - record: idf:hebrew_user_experience_score
+        expr: |
+          (
+            (1 - (idf:hebrew_processing_duration_p95_5m / 0.5)) * 0.7 +  # Normalize to 0.5s max
+            (1 - (idf:data_validation_error_rate_5m / 5)) * 0.3  # Normalize to 5 errors/sec max
+          ) * 100

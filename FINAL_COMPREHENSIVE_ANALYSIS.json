@@ -1,0 +1,524 @@
+{
+  "analysis_metadata": {
+    "file_analyzed": "/home/QuantNova/IDF-/קובץ בדיקות כולל לקריית התקשוב גרסא מלאה 150725 (1).xlsx",
+    "analysis_date": "2025-07-17T22:36:47.402266",
+    "total_sheets": 2,
+    "sheet_names": [
+      "טבלה מרכזת",
+      "ערכים"
+    ]
+  },
+  "lookup_data": {
+    "buildings": [
+      "10A",
+      "10B",
+      "10C",
+      "10D",
+      "20",
+      "30",
+      "40",
+      "50",
+      "60",
+      "70",
+      "80",
+      "90",
+      "100",
+      "110",
+      "120",
+      "130",
+      "140",
+      "161",
+      "162",
+      "163",
+      "171",
+      "172",
+      "200",
+      "ליבת מערכות",
+      "כלל המבנים",
+      "164",
+      "200B"
+    ],
+    "building_managers": [
+      "יוסי שמש",
+      "ערן ברגיל",
+      "יקיר נבון",
+      "זיו חג'בי",
+      "איציק דאבוש",
+      "מיכאל קפלון",
+      "חנוך חוטר",
+      "אורנית ג'יספאן",
+      "זיו מטודי",
+      "ערן ברגיל + רונן פרץ",
+      "דוד שוחט"
+    ],
+    "red_teams": [
+      "דנה אבני + ציון לחיאני",
+      "שירן פיטוסי",
+      "עידן אוחיון",
+      "שירן + אורי",
+      "לירון קוטלר"
+    ],
+    "inspection_types": [
+      "הנדסית",
+      "אפיונית",
+      "תשתית פאסיבית פנים מבנה",
+      "תשתית פאסיבית בין מבנים",
+      "בינוי תומך תפעול",
+      "רשת אקטיבית שמורה",
+      "רשת אקטיבית סודית",
+      "רשת אקטיבית סודי ביותר",
+      "בדיקה תפעולית למבנה",
+      "ספירת ריהוט",
+      "הרצה תפעולית",
+      "שבוע תרגול והטמעה",
+      "בדיקת ארונות חוץ",
+      "מערכת אבטחה היקפית ליבה",
+      "מערכת טמ\"ס ליבה",
+      "מערכת אזעקה ליבה",
+      "מערכת בקרת כניסה ליבה",
+      "מערכת כריזה ליבה",
+      "מערכת שו\"ב אבטחה ליבה",
+      "מערכת שילוט אלקטרוני ליבה",
+      "מערכת ניהול עיר ליבה",
+      "מערכת ניהול תשתיות ליבה",
+      "מערכת טלפוניה ליבה",
+      "מולטימדיה זכיין ליבה\nכולל מערכת שו\"ב מולטימדיה",
+      "מערכת נוב מרכזית",
+      "תשתיות שד\"ב",
+      "תשתיות IT  - ליבה - אינטרנט",
+      "תשתיות IT  - ליבה -שמורה",
+      "תשתיות IT  - ליבה - בקרת מבנה",
+      "תשתיות IT  - ליבה - מולטימדיה",
+      "הגנה בסייבר - ליבה - אינטרנט",
+      "הגנה בסייבר - ליבה - שמורה",
+      "הגנה בסייבר - ליבה - בקרת מבנה",
+      "הגנה בסייבר - ליבה - מולטימדיה",
+      "רשת אינטרנט - ליבה ",
+      "רשת שמורה - ליבה",
+      "רשת בקרת מבנה - ליבה",
+      "רשת מולטימדיה - ליבה",
+      "רשת אינטרנט - שו\"ב",
+      "רשת שמורה - שו\"ב",
+      "רשת בקרת מבנה - שו\"ב",
+      "רשת מולטימדיה - שו\"ב",
+      "רשת מבצעי כולל שו\"ב",
+      "בדיקות מערכות אבטחה",
+      "בדיקות מערכות מולטימדיה",
+      "בדיקות עמדות קצה",
+      "בדיקת בינוי תומך תקשוב במכלולי תקשוב",
+      "הרצת תפ\"מים ורציפות תפקוד",
+      "בדיקת EMP",
+      "הנדסית טהורה- אקוסטיקה",
+      "הנדסית טהורה-פינוי עשן",
+      "הנדסית טהורה- איטום הצפה וניקוזים",
+      "הנדסית טהורה- קרינה"
+    ],
+    "inspection_leaders": [
+      "יקיר נבון",
+      "זיו חג'בי",
+      "לירון קוטלר",
+      "טלי עיני",
+      "מיכאל קפלון",
+      " חן זוהר ראדה",
+      "יגאל גזמן",
+      "לנה ספבק",
+      "ניר מנדלבוים",
+      "איציק דאבוש",
+      "חנוך חוטר",
+      "ערן ברגיל+ רונן פרץ",
+      "זיו מטודי",
+      "אורנית ג'יספאן",
+      "שרון אלעזרי",
+      "עדן קקון",
+      "רוי בנימין",
+      "חיים כהן",
+      "רונן סולומון",
+      "אורי כהן",
+      "אבינועם הרשברג",
+      "שלומי שפר",
+      "נטשה וסקובייניק",
+      "אריה אלקובי",
+      "שרון נזירי",
+      "רועי צברי",
+      "יוסי שמש",
+      "דוד שוחט",
+      "קארין נוקי",
+      "דוד מרציאנו",
+      "רונן קעטבי"
+    ],
+    "inspection_rounds": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "regulators": [
+      "אהו\"ב",
+      "חושן",
+      "מצו\"ב",
+      "בטחון מידע",
+      "מזון",
+      "הגנת מחנות",
+      "רבנות",
+      "ברה\"צ",
+      "בטחון",
+      "בטיחות",
+      "הגנ\"ס",
+      "כש\"ג",
+      "כוורת",
+      "מהנדס חשמל ראשי",
+      "מקרפ\"ר",
+      "חושן - חנוך חוטר",
+      "חושן - אלי אלגזר",
+      "חושן - רונן קעטבי"
+    ],
+    "yes_no_options": [
+      "כן",
+      "לא"
+    ]
+  },
+  "column_mapping": {
+    "מבנה": "building_id",
+    "מנהל\nמבנה": "building_manager",
+    "צוות\nאדום": "red_team",
+    "סוג\nהבדיקה": "inspection_type",
+    "מוביל\nהבדיקה": "inspection_leader",
+    "סבב\nבדיקות": "inspection_round",
+    "רגולטור\n1": "regulator_1",
+    "רגולטור\n2": "regulator_2",
+    "רגולטור\n3": "regulator_3",
+    "רגולטור\n4": "regulator_4",
+    "לו\"ז ביצוע\nמתואם/ ריאלי": "execution_schedule",
+    "יעד\nלסיום": "target_completion",
+    "האם מתואם\nמול זכיין?": "coordinated_with_contractor",
+    "צרופת\nדו\"ח ליקויים": "defect_report_path",
+    "האם\nהדו\"ח הופץ": "report_distributed",
+    "תאריך\nהפצת הדו\"ח": "distribution_date",
+    "בדיקה\nחוזרת": "repeat_inspection",
+    "התרשמות\nמהבדיקה": "inspection_notes"
+  },
+  "database_schema": {
+    "main_table": {
+      "name": "inspections",
+      "description": "Primary inspection tracking table",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INT PRIMARY KEY AUTO_INCREMENT",
+          "description": "Unique inspection ID"
+        },
+        {
+          "name": "building_id",
+          "type": "VARCHAR(20)",
+          "hebrew": "מבנה",
+          "required": true
+        },
+        {
+          "name": "building_manager",
+          "type": "VARCHAR(100)",
+          "hebrew": "מנהל מבנה",
+          "required": false
+        },
+        {
+          "name": "red_team",
+          "type": "VARCHAR(200)",
+          "hebrew": "צוות אדום",
+          "required": false
+        },
+        {
+          "name": "inspection_type",
+          "type": "VARCHAR(150)",
+          "hebrew": "סוג הבדיקה",
+          "required": true
+        },
+        {
+          "name": "inspection_leader",
+          "type": "VARCHAR(100)",
+          "hebrew": "מוביל הבדיקה",
+          "required": true
+        },
+        {
+          "name": "inspection_round",
+          "type": "INT",
+          "hebrew": "סבב בדיקות",
+          "required": false
+        },
+        {
+          "name": "regulator_1",
+          "type": "VARCHAR(100)",
+          "hebrew": "רגולטור 1",
+          "required": false
+        },
+        {
+          "name": "regulator_2",
+          "type": "VARCHAR(100)",
+          "hebrew": "רגולטור 2",
+          "required": false
+        },
+        {
+          "name": "regulator_3",
+          "type": "VARCHAR(100)",
+          "hebrew": "רגולטור 3",
+          "required": false
+        },
+        {
+          "name": "regulator_4",
+          "type": "VARCHAR(100)",
+          "hebrew": "רגולטור 4",
+          "required": false
+        },
+        {
+          "name": "execution_schedule",
+          "type": "DATE",
+          "hebrew": "לוח זמנים ביצוע",
+          "required": false
+        },
+        {
+          "name": "target_completion",
+          "type": "DATE",
+          "hebrew": "יעד לסיום",
+          "required": false
+        },
+        {
+          "name": "coordinated_with_contractor",
+          "type": "ENUM('כן', 'לא')",
+          "hebrew": "מתואם מול זכיין",
+          "required": false
+        },
+        {
+          "name": "defect_report_path",
+          "type": "VARCHAR(500)",
+          "hebrew": "נתיב דוח ליקויים",
+          "required": false
+        },
+        {
+          "name": "report_distributed",
+          "type": "ENUM('כן', 'לא')",
+          "hebrew": "דוח הופץ",
+          "required": false
+        },
+        {
+          "name": "distribution_date",
+          "type": "DATE",
+          "hebrew": "תאריך הפצה",
+          "required": false
+        },
+        {
+          "name": "repeat_inspection",
+          "type": "ENUM('כן', 'לא')",
+          "hebrew": "בדיקה חוזרת",
+          "required": false
+        },
+        {
+          "name": "inspection_notes",
+          "type": "TEXT",
+          "hebrew": "התרשמות",
+          "required": false
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+          "description": "Record creation time"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+          "description": "Last update time"
+        }
+      ]
+    },
+    "lookup_tables": {
+      "buildings": {
+        "name": "buildings",
+        "columns": [
+          {
+            "name": "id",
+            "type": "VARCHAR(20) PRIMARY KEY"
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR(200)"
+          },
+          {
+            "name": "description",
+            "type": "TEXT"
+          }
+        ]
+      },
+      "managers": {
+        "name": "building_managers",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT PRIMARY KEY AUTO_INCREMENT"
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR(100)"
+          },
+          {
+            "name": "email",
+            "type": "VARCHAR(100)"
+          },
+          {
+            "name": "phone",
+            "type": "VARCHAR(20)"
+          }
+        ]
+      },
+      "teams": {
+        "name": "red_teams",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT PRIMARY KEY AUTO_INCREMENT"
+          },
+          {
+            "name": "team_name",
+            "type": "VARCHAR(200)"
+          },
+          {
+            "name": "members",
+            "type": "TEXT"
+          }
+        ]
+      },
+      "inspection_types": {
+        "name": "inspection_types",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT PRIMARY KEY AUTO_INCREMENT"
+          },
+          {
+            "name": "type_name",
+            "type": "VARCHAR(150)"
+          },
+          {
+            "name": "category",
+            "type": "VARCHAR(50)"
+          },
+          {
+            "name": "description",
+            "type": "TEXT"
+          }
+        ]
+      },
+      "regulators": {
+        "name": "regulators",
+        "columns": [
+          {
+            "name": "id",
+            "type": "INT PRIMARY KEY AUTO_INCREMENT"
+          },
+          {
+            "name": "name",
+            "type": "VARCHAR(100)"
+          },
+          {
+            "name": "type",
+            "type": "VARCHAR(50)"
+          },
+          {
+            "name": "contact_info",
+            "type": "TEXT"
+          }
+        ]
+      }
+    }
+  },
+  "hebrew_requirements": {
+    "database": {
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "connection_charset": "utf8mb4"
+    },
+    "web_app": {
+      "html_charset": "UTF-8",
+      "content_type": "text/html; charset=utf-8",
+      "meta_charset": "<meta charset=\"UTF-8\">",
+      "text_direction": "rtl",
+      "language": "he"
+    },
+    "css_requirements": {
+      "direction": "rtl",
+      "font_family": [
+        "Arial",
+        "Tahoma",
+        "Segoe UI",
+        "Open Sans Hebrew"
+      ],
+      "text_align": "right"
+    },
+    "form_handling": {
+      "encoding": "UTF-8",
+      "submit_method": "POST",
+      "accept_charset": "UTF-8"
+    },
+    "export_formats": {
+      "csv": "UTF-8 with BOM",
+      "excel": "UTF-8",
+      "pdf": "Support Hebrew fonts"
+    }
+  },
+  "web_app_recommendations": {
+    "architecture": {
+      "backend": "PHP/Laravel or Python/Django",
+      "database": "MySQL 8.0+ or PostgreSQL 13+",
+      "frontend": "Bootstrap 5 with RTL support",
+      "css_framework": "Bootstrap RTL or custom RTL CSS"
+    },
+    "key_features": [
+      "Inspection management dashboard",
+      "Building and manager master data",
+      "Inspection scheduling and tracking",
+      "Report generation and distribution",
+      "File upload for defect reports",
+      "Search and filtering capabilities",
+      "Export to Excel/PDF",
+      "User authentication and roles",
+      "Audit trail for changes",
+      "Mobile-responsive design"
+    ],
+    "ui_considerations": [
+      "Right-to-left text direction",
+      "Hebrew-friendly fonts",
+      "Date pickers with Hebrew calendar support",
+      "Dropdown menus with Hebrew options",
+      "Form validation in Hebrew",
+      "Error messages in Hebrew",
+      "Navigation in Hebrew"
+    ],
+    "data_validation": [
+      "Building ID format validation",
+      "Date range validation",
+      "Required field validation",
+      "File upload validation",
+      "Hebrew text length limits",
+      "Dropdown option validation"
+    ]
+  },
+  "data_insights": {
+    "data_volume": {
+      "total_inspections": 491,
+      "unique_buildings": 25,
+      "unique_managers": 10,
+      "unique_types": 56,
+      "unique_leaders": 7
+    },
+    "data_quality": {
+      "records_with_dates": 109,
+      "records_with_notes": 18,
+      "records_with_regulators": 177,
+      "completion_rate": "22.2%"
+    },
+    "business_rules": [
+      "Each inspection must have a building ID and type",
+      "Inspection rounds are numbered 1-4",
+      "Multiple regulators can be assigned to one inspection",
+      "Reports can be distributed with tracking dates",
+      "Repeat inspections are tracked with yes/no flag",
+      "File attachments for defect reports are supported"
+    ]
+  }
+}

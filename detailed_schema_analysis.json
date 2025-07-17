@@ -1,0 +1,290 @@
+{
+  "main_table_schema": {
+    "table_name": "inspections",
+    "description": "Main inspection tracking table (טבלה מרכזת)",
+    "columns": [
+      {
+        "name": "building_id",
+        "type": "VARCHAR(10)",
+        "hebrew": "מבנה",
+        "description": "Building identifier"
+      },
+      {
+        "name": "building_manager",
+        "type": "VARCHAR(100)",
+        "hebrew": "מנהל מבנה",
+        "description": "Building manager name"
+      },
+      {
+        "name": "red_team",
+        "type": "VARCHAR(200)",
+        "hebrew": "צוות אדום",
+        "description": "Red team members"
+      },
+      {
+        "name": "inspection_type",
+        "type": "VARCHAR(100)",
+        "hebrew": "סוג הבדיקה",
+        "description": "Type of inspection"
+      },
+      {
+        "name": "inspection_leader",
+        "type": "VARCHAR(100)",
+        "hebrew": "מוביל הבדיקה",
+        "description": "Inspection team leader"
+      },
+      {
+        "name": "inspection_round",
+        "type": "INT",
+        "hebrew": "סבב בדיקות",
+        "description": "Inspection round number"
+      },
+      {
+        "name": "regulator_1",
+        "type": "VARCHAR(50)",
+        "hebrew": "רגולטור 1",
+        "description": "Primary regulator"
+      },
+      {
+        "name": "regulator_2",
+        "type": "VARCHAR(50)",
+        "hebrew": "רגולטור 2",
+        "description": "Secondary regulator"
+      },
+      {
+        "name": "regulator_3",
+        "type": "VARCHAR(50)",
+        "hebrew": "רגולטור 3",
+        "description": "Tertiary regulator"
+      },
+      {
+        "name": "regulator_4",
+        "type": "VARCHAR(50)",
+        "hebrew": "רגולטור 4",
+        "description": "Quaternary regulator"
+      },
+      {
+        "name": "execution_schedule",
+        "type": "DATE",
+        "hebrew": "לו\"ז ביצוע מתואם/ ריאלי",
+        "description": "Scheduled/actual execution date"
+      },
+      {
+        "name": "target_completion",
+        "type": "DATE",
+        "hebrew": "יעד לסיום",
+        "description": "Target completion date"
+      },
+      {
+        "name": "coordinated_with_contractor",
+        "type": "BOOLEAN",
+        "hebrew": "האם מתואם מול זכיין?",
+        "description": "Coordinated with contractor"
+      },
+      {
+        "name": "defect_report_attached",
+        "type": "VARCHAR(500)",
+        "hebrew": "צרופת דו\"ח ליקויים",
+        "description": "Defect report file path"
+      },
+      {
+        "name": "report_distributed",
+        "type": "BOOLEAN",
+        "hebrew": "האם הדו\"ח הופץ",
+        "description": "Report distributed flag"
+      },
+      {
+        "name": "distribution_date",
+        "type": "DATE",
+        "hebrew": "תאריך הפצת הדו\"ח",
+        "description": "Report distribution date"
+      },
+      {
+        "name": "repeat_inspection",
+        "type": "BOOLEAN",
+        "hebrew": "בדיקה חוזרת",
+        "description": "Requires repeat inspection"
+      },
+      {
+        "name": "inspection_notes",
+        "type": "TEXT",
+        "hebrew": "התרשמות מהבדיקה",
+        "description": "Inspection impressions/notes"
+      }
+    ]
+  },
+  "lookup_tables_schema": {
+    "buildings": {
+      "table_name": "buildings",
+      "description": "Building master data",
+      "columns": [
+        {
+          "name": "building_id",
+          "type": "VARCHAR(10) PRIMARY KEY",
+          "description": "Building identifier"
+        },
+        {
+          "name": "building_name",
+          "type": "VARCHAR(200)",
+          "description": "Building full name"
+        }
+      ]
+    },
+    "managers": {
+      "table_name": "building_managers",
+      "description": "Building managers lookup",
+      "columns": [
+        {
+          "name": "manager_id",
+          "type": "INT PRIMARY KEY AUTO_INCREMENT",
+          "description": "Manager ID"
+        },
+        {
+          "name": "manager_name",
+          "type": "VARCHAR(100)",
+          "description": "Manager full name"
+        }
+      ]
+    },
+    "teams": {
+      "table_name": "red_teams",
+      "description": "Red team configurations",
+      "columns": [
+        {
+          "name": "team_id",
+          "type": "INT PRIMARY KEY AUTO_INCREMENT",
+          "description": "Team ID"
+        },
+        {
+          "name": "team_members",
+          "type": "VARCHAR(200)",
+          "description": "Team member names"
+        }
+      ]
+    },
+    "inspection_types": {
+      "table_name": "inspection_types",
+      "description": "Types of inspections",
+      "columns": [
+        {
+          "name": "type_id",
+          "type": "INT PRIMARY KEY AUTO_INCREMENT",
+          "description": "Type ID"
+        },
+        {
+          "name": "type_name",
+          "type": "VARCHAR(100)",
+          "description": "Inspection type name"
+        },
+        {
+          "name": "type_description",
+          "type": "TEXT",
+          "description": "Detailed description"
+        }
+      ]
+    },
+    "regulators": {
+      "table_name": "regulators",
+      "description": "Regulatory bodies",
+      "columns": [
+        {
+          "name": "regulator_id",
+          "type": "INT PRIMARY KEY AUTO_INCREMENT",
+          "description": "Regulator ID"
+        },
+        {
+          "name": "regulator_name",
+          "type": "VARCHAR(100)",
+          "description": "Regulator name"
+        },
+        {
+          "name": "regulator_type",
+          "type": "VARCHAR(50)",
+          "description": "Type/level of regulator"
+        }
+      ]
+    }
+  },
+  "hebrew_requirements": {
+    "database_charset": "utf8mb4",
+    "database_collation": "utf8mb4_unicode_ci",
+    "connection_charset": "utf8mb4",
+    "html_meta_charset": "UTF-8",
+    "content_type": "text/html; charset=utf-8",
+    "form_encoding": "application/x-www-form-urlencoded; charset=UTF-8",
+    "json_encoding": "UTF-8",
+    "csv_export_encoding": "UTF-8 with BOM",
+    "rtl_support": true,
+    "font_recommendations": [
+      "Arial",
+      "Tahoma",
+      "Segoe UI",
+      "Open Sans Hebrew"
+    ],
+    "text_direction": "rtl"
+  },
+  "column_groups": {
+    "מבנה": {
+      "header_col": 1,
+      "data_col": 2,
+      "values": []
+    },
+    "מנהל מבנה": {
+      "header_col": 3,
+      "data_col": 4,
+      "values": []
+    },
+    "צוות אדום": {
+      "header_col": 5,
+      "data_col": 6,
+      "values": []
+    },
+    "סוג בדיקה": {
+      "header_col": 7,
+      "data_col": 8,
+      "values": []
+    },
+    "מוביל בדיקה": {
+      "header_col": 9,
+      "data_col": 10,
+      "values": []
+    },
+    "סבב בדיקות": {
+      "header_col": 11,
+      "data_col": 12,
+      "values": []
+    },
+    "רגולטור 1,2,3,4": {
+      "header_col": 13,
+      "data_col": 14,
+      "values": []
+    },
+    "האם מתואם מול זכיין?": {
+      "header_col": 15,
+      "data_col": 16,
+      "values": []
+    },
+    "צרופת דו\"ח ליקויים": {
+      "header_col": 17,
+      "data_col": 18,
+      "values": []
+    },
+    "האם הדו\"ח הופץ": {
+      "header_col": 19,
+      "data_col": 20,
+      "values": []
+    },
+    "בדיקה חוזרת": {
+      "header_col": 21,
+      "data_col": null,
+      "values": []
+    }
+  },
+  "data_insights": {
+    "total_inspections": 491,
+    "total_buildings": 0,
+    "unique_inspection_types": 0,
+    "unique_managers": 0,
+    "regulators_count": 0
+  }
+}

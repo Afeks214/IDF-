@@ -1,0 +1,40 @@
+# IDF Testing Infrastructure - Kubernetes Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: idf-testing
+  labels:
+    name: idf-testing
+    environment: production
+    purpose: military-testing-infrastructure
+  annotations:
+    description: "IDF Testing Infrastructure Production Environment"
+    security.policy: "military-grade"
+---
+# Network Policy for isolation
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: idf-network-policy
+  namespace: idf-testing
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: idf-testing
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: idf-testing
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53

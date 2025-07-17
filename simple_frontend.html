@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDF Testing Infrastructure - Hebrew Web App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', 'Heebo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+            text-align: right;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-success {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        
+        .status-error {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: right;
+        }
+        
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            color: #6c757d;
+        }
+        
+        .hebrew-text {
+            font-family: 'Arial', 'Heebo', 'Tahoma', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 מערכת ניהול בדיקות קריית התקשוב</h1>
+            <p>IDF Testing Infrastructure Management System</p>
+        </div>
+        
+        <div class="content">
+            <div id="status" class="status-card">
+                <h3>🔍 בדיקת מצב המערכת</h3>
+                <p>בודק חיבור לשרת ובסיס נתונים...</p>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn" onclick="checkHealth()">🔄 בדוק מצב שרת</button>
+                <button class="btn" onclick="loadBuildings()">🏢 טען רשימת מבנים</button>
+                <button class="btn" onclick="loadExcelData()">📊 טען נתוני אקסל</button>
+            </div>
+            
+            <div id="data-container" class="loading" style="display: none;">
+                <div class="loading">טוען נתונים...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8001';
+        
+        async function checkHealth() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<h3>🔍 בדיקת מצב המערכת</h3><p>בודק חיבור לשרת...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/health`);
+                const data = await response.json();
+                
+                if (data.status === 'healthy') {
+                    statusDiv.className = 'status-card status-success';
+                    statusDiv.innerHTML = `
+                        <h3>✅ המערכת פעילה ותקינה</h3>
+                        <p><strong>מצב API:</strong> ${data.status}</p>
+                        <p><strong>מצב בסיס נתונים:</strong> ${data.database}</p>
+                        <p><strong>גרסת API:</strong> ${data.api_version}</p>
+                    `;
+                } else {
+                    throw new Error('Server unhealthy');
+                }
+            } catch (error) {
+                statusDiv.className = 'status-card status-error';
+                statusDiv.innerHTML = `
+                    <h3>❌ שגיאה בחיבור למערכת</h3>
+                    <p>לא ניתן להתחבר לשרת. אנא ודא שהשרת פעיל על פורט 8001.</p>
+                    <p><strong>שגיאה:</strong> ${error.message}</p>
+                `;
+            }
+        }
+        
+        async function loadBuildings() {
+            const container = document.getElementById('data-container');
+            container.style.display = 'block';
+            container.innerHTML = '<div class="loading">טוען רשימת מבנים...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/buildings`);
+                const data = await response.json();
+                
+                let html = '<h3>🏢 רשימת מבנים</h3>';
+                html += '<table class="data-table">';
+                html += '<tr><th>מזהה מבנה</th><th>שם מבנה</th><th>מנהל מבנה</th></tr>';
+                
+                data.buildings.forEach(building => {
+                    html += `<tr>
+                        <td class="hebrew-text">${building.id}</td>
+                        <td class="hebrew-text">${building.name}</td>
+                        <td class="hebrew-text">${building.manager}</td>
+                    </tr>`;
+                });
+                
+                html += '</table>';
+                container.innerHTML = html;
+                
+            } catch (error) {
+                container.innerHTML = `<div class="status-card status-error">
+                    <h3>❌ שגיאה בטעינת נתונים</h3>
+                    <p>${error.message}</p>
+                </div>`;
+            }
+        }
+        
+        async function loadExcelData() {
+            const container = document.getElementById('data-container');
+            container.style.display = 'block';
+            container.innerHTML = '<div class="loading">טוען נתוני אקסל עבריים...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/excel-data`);
+                const data = await response.json();
+                
+                let html = `<h3>📊 נתוני אקסל - ${data.total_records} רשומות</h3>`;
+                html += `<p class="hebrew-text">${data.message}</p>`;
+                
+                if (data.data && data.data.length > 0) {
+                    html += '<table class="data-table">';
+                    
+                    // Table headers from first record
+                    const firstRecord = data.data[0];
+                    html += '<tr>';
+                    Object.keys(firstRecord).forEach(key => {
+                        html += `<th class="hebrew-text">${key}</th>`;
+                    });
+                    html += '</tr>';
+                    
+                    // Table rows
+                    data.data.forEach(record => {
+                        html += '<tr>';
+                        Object.values(record).forEach(value => {
+                            html += `<td class="hebrew-text">${value || 'N/A'}</td>`;
+                        });
+                        html += '</tr>';
+                    });
+                    
+                    html += '</table>';
+                }
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                container.innerHTML = `<div class="status-card status-error">
+                    <h3>❌ שגיאה בטעינת נתוני אקסל</h3>
+                    <p>${error.message}</p>
+                </div>`;
+            }
+        }
+        
+        // Auto-check health on page load
+        window.addEventListener('load', checkHealth);
+    </script>
+</body>
+</html>

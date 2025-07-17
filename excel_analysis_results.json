@@ -1,0 +1,1039 @@
+{
+  "file_info": {
+    "file_path": "/home/QuantNova/IDF-/קובץ בדיקות כולל לקריית התקשוב גרסא מלאה 150725 (1).xlsx",
+    "file_size": 64921
+  },
+  "worksheets": {
+    "טבלה מרכזת": {
+      "sheet_name": "טבלה מרכזת",
+      "dimensions": {
+        "rows": 495,
+        "columns": 18
+      },
+      "data_types": {
+        "col_0": "numeric_string",
+        "col_1": "text",
+        "col_2": "text",
+        "col_3": "text",
+        "col_4": "text",
+        "col_5": "numeric_string",
+        "col_6": "text",
+        "col_7": "text",
+        "col_8": "text",
+        "col_9": "text",
+        "col_10": "date_string",
+        "col_11": "date_string",
+        "col_12": "text",
+        "col_13": "text",
+        "col_14": "text",
+        "col_15": "date_string",
+        "col_16": "text",
+        "col_17": "text"
+      },
+      "sample_data": {
+        "row_0": {
+          "col_0": "טבלת בדיקות כולל לקריית התקשוב",
+          "col_1": null,
+          "col_2": null,
+          "col_3": null,
+          "col_4": null,
+          "col_5": null,
+          "col_6": null,
+          "col_7": null,
+          "col_8": null,
+          "col_9": null,
+          "col_10": null,
+          "col_11": null,
+          "col_12": null,
+          "col_13": null,
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null
+        },
+        "row_1": {
+          "col_0": null,
+          "col_1": null,
+          "col_2": null,
+          "col_3": null,
+          "col_4": null,
+          "col_5": null,
+          "col_6": null,
+          "col_7": null,
+          "col_8": null,
+          "col_9": null,
+          "col_10": null,
+          "col_11": null,
+          "col_12": null,
+          "col_13": null,
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null
+        },
+        "row_2": {
+          "col_0": "רשימה נפתחת",
+          "col_1": "רשימה נפתחת",
+          "col_2": "רשימה נפתחת",
+          "col_3": "רשימה נפתחת",
+          "col_4": "רשימה נפתחת",
+          "col_5": "רשימה נפתחת",
+          "col_6": "רשימה נפתחת רגולטור",
+          "col_7": null,
+          "col_8": null,
+          "col_9": null,
+          "col_10": "DD/MM/YY",
+          "col_11": "DD/MM/YY",
+          "col_12": "רשימה נפתחת",
+          "col_13": "רשימה נפתחת",
+          "col_14": "רשימה נפתחת",
+          "col_15": "DD/MM/YY",
+          "col_16": "רשימה נפתחת",
+          "col_17": null
+        },
+        "row_3": {
+          "col_0": "מבנה",
+          "col_1": "מנהל\nמבנה",
+          "col_2": "צוות\nאדום",
+          "col_3": "סוג\nהבדיקה",
+          "col_4": "מוביל\nהבדיקה",
+          "col_5": "סבב\nבדיקות",
+          "col_6": "רגולטור\n1",
+          "col_7": "רגולטור\n2",
+          "col_8": "רגולטור\n3",
+          "col_9": "רגולטור\n4",
+          "col_10": "לו\"ז ביצוע\nמתואם/ ריאלי",
+          "col_11": "יעד\nלסיום",
+          "col_12": "האם מתואם\nמול זכיין?",
+          "col_13": "צרופת\nדו\"ח ליקויים",
+          "col_14": "האם\nהדו\"ח הופץ",
+          "col_15": "תאריך\nהפצת הדו\"ח",
+          "col_16": "בדיקה\nחוזרת",
+          "col_17": "התרשמות\nמהבדיקה"
+        },
+        "row_4": {
+          "col_0": "40",
+          "col_1": "יוסי שמש",
+          "col_2": "דנה אבני + ציון לחיאני",
+          "col_3": "הנדסית",
+          "col_4": "יגאל גזמן",
+          "col_5": "1",
+          "col_6": null,
+          "col_7": null,
+          "col_8": null,
+          "col_9": null,
+          "col_10": null,
+          "col_11": null,
+          "col_12": null,
+          "col_13": null,
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null
+        },
+        "row_5": {
+          "col_0": "40",
+          "col_1": "יוסי שמש",
+          "col_2": "דנה אבני + ציון לחיאני",
+          "col_3": "אפיונית",
+          "col_4": "יוסי שמש",
+          "col_5": "1",
+          "col_6": null,
+          "col_7": null,
+          "col_8": null,
+          "col_9": null,
+          "col_10": "2025-05-05 00:00:00",
+          "col_11": "2025-05-05 00:00:00",
+          "col_12": "כן",
+          "col_13": null,
+          "col_14": "לא",
+          "col_15": null,
+          "col_16": "כן",
+          "col_17": "מוכנות המבנה נמוכה בעיקר במרתף לאחר סבב ראשון. "
+        },
+        "row_6": {
+          "col_0": "40",
+          "col_1": "יוסי שמש",
+          "col_2": "דנה אבני + ציון לחיאני",
+          "col_3": "אפיונית",
+          "col_4": "יוסי שמש",
+          "col_5": "2",
+          "col_6": null,
+          "col_7": null,
+          "col_8": null,
+          "col_9": null,
+          "col_10": "2025-07-15 00:00:00",
+          "col_11": "2025-07-15 00:00:00",
+          "col_12": null,
+          "col_13": null,
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null
+        },
+        "row_7": {
+          "col_0": "40",
+          "col_1": "יוסי שמש",
+          "col_2": "דנה אבני + ציון לחיאני",
+          "col_3": "אפיונית",
+          "col_4": "יוסי שמש",
+          "col_5": "3",
+          "col_6": null,
+          "col_7": null,
+          "col_8": null,
+          "col_9": null,
+          "col_10": "2025-08-20 00:00:00",
+          "col_11": "2025-08-20 00:00:00",
+          "col_12": null,
+          "col_13": null,
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null
+        },
+        "row_8": {
+          "col_0": "40",
+          "col_1": "יוסי שמש",
+          "col_2": "דנה אבני + ציון לחיאני",
+          "col_3": "הנדסית טהורה- קרינה",
+          "col_4": "אורנית ג'יספאן",
+          "col_5": "1",
+          "col_6": null,
+          "col_7": null,
+          "col_8": null,
+          "col_9": null,
+          "col_10": null,
+          "col_11": null,
+          "col_12": null,
+          "col_13": null,
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null
+        },
+        "row_9": {
+          "col_0": "40",
+          "col_1": "יוסי שמש",
+          "col_2": "דנה אבני + ציון לחיאני",
+          "col_3": "הנדסית טהורה- איטום הצפה וניקוזים",
+          "col_4": "אורנית ג'יספאן",
+          "col_5": "1",
+          "col_6": null,
+          "col_7": null,
+          "col_8": null,
+          "col_9": null,
+          "col_10": null,
+          "col_11": null,
+          "col_12": null,
+          "col_13": null,
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null
+        }
+      },
+      "column_analysis": {
+        "col_0": {
+          "total_values": 495,
+          "non_null_values": 494,
+          "null_values": 1,
+          "unique_values": 28,
+          "data_type": "numeric_string",
+          "sample_values": [
+            "טבלת בדיקות כולל לקריית התקשוב",
+            "רשימה נפתחת",
+            "מבנה",
+            "40",
+            "50"
+          ]
+        },
+        "col_1": {
+          "total_values": 495,
+          "non_null_values": 359,
+          "null_values": 136,
+          "unique_values": 12,
+          "data_type": "text",
+          "sample_values": [
+            "רשימה נפתחת",
+            "מנהל\nמבנה",
+            "יוסי שמש",
+            "ערן ברגיל + רונן פרץ",
+            "יקיר נבון"
+          ]
+        },
+        "col_2": {
+          "total_values": 495,
+          "non_null_values": 122,
+          "null_values": 373,
+          "unique_values": 7,
+          "data_type": "text",
+          "sample_values": [
+            "רשימה נפתחת",
+            "צוות\nאדום",
+            "דנה אבני + ציון לחיאני",
+            "שירן פיטוסי",
+            "עידן אוחיון"
+          ]
+        },
+        "col_3": {
+          "total_values": 495,
+          "non_null_values": 492,
+          "null_values": 3,
+          "unique_values": 58,
+          "data_type": "text",
+          "sample_values": [
+            "רשימה נפתחת",
+            "סוג\nהבדיקה",
+            "הנדסית",
+            "אפיונית",
+            "הנדסית טהורה- קרינה"
+          ]
+        },
+        "col_4": {
+          "total_values": 495,
+          "non_null_values": 491,
+          "null_values": 4,
+          "unique_values": 9,
+          "data_type": "text",
+          "sample_values": [
+            "רשימה נפתחת",
+            "מוביל\nהבדיקה",
+            "יגאל גזמן",
+            "יוסי שמש",
+            "אורנית ג'יספאן"
+          ]
+        },
+        "col_5": {
+          "total_values": 495,
+          "non_null_values": 222,
+          "null_values": 273,
+          "unique_values": 5,
+          "data_type": "numeric_string",
+          "sample_values": [
+            "רשימה נפתחת",
+            "סבב\nבדיקות",
+            "1",
+            "2",
+            "3"
+          ]
+        },
+        "col_6": {
+          "total_values": 495,
+          "non_null_values": 179,
+          "null_values": 316,
+          "unique_values": 14,
+          "data_type": "text",
+          "sample_values": [
+            "רשימה נפתחת רגולטור",
+            "רגולטור\n1",
+            "חושן",
+            "כש\"ג",
+            "רבנות"
+          ]
+        },
+        "col_7": {
+          "total_values": 495,
+          "non_null_values": 8,
+          "null_values": 487,
+          "unique_values": 3,
+          "data_type": "text",
+          "sample_values": [
+            "רגולטור\n2",
+            "ברה\"צ",
+            "בטחון מידע"
+          ]
+        },
+        "col_8": {
+          "total_values": 495,
+          "non_null_values": 8,
+          "null_values": 487,
+          "unique_values": 3,
+          "data_type": "text",
+          "sample_values": [
+            "רגולטור\n3",
+            "רבנות",
+            "חושן"
+          ]
+        },
+        "col_9": {
+          "total_values": 495,
+          "non_null_values": 1,
+          "null_values": 494,
+          "unique_values": 1,
+          "data_type": "text",
+          "sample_values": [
+            "רגולטור\n4"
+          ]
+        },
+        "col_10": {
+          "total_values": 495,
+          "non_null_values": 111,
+          "null_values": 384,
+          "unique_values": 49,
+          "data_type": "date_string",
+          "sample_values": [
+            "DD/MM/YY",
+            "לו\"ז ביצוע\nמתואם/ ריאלי",
+            "2025-05-05 00:00:00",
+            "2025-07-15 00:00:00",
+            "2025-08-20 00:00:00"
+          ]
+        },
+        "col_11": {
+          "total_values": 495,
+          "non_null_values": 29,
+          "null_values": 466,
+          "unique_values": 17,
+          "data_type": "date_string",
+          "sample_values": [
+            "DD/MM/YY",
+            "יעד\nלסיום",
+            "2025-05-05 00:00:00",
+            "2025-07-15 00:00:00",
+            "2025-08-20 00:00:00"
+          ]
+        },
+        "col_12": {
+          "total_values": 495,
+          "non_null_values": 50,
+          "null_values": 445,
+          "unique_values": 3,
+          "data_type": "text",
+          "sample_values": [
+            "רשימה נפתחת",
+            "האם מתואם\nמול זכיין?",
+            "כן"
+          ]
+        },
+        "col_13": {
+          "total_values": 495,
+          "non_null_values": 4,
+          "null_values": 491,
+          "unique_values": 4,
+          "data_type": "text",
+          "sample_values": [
+            "רשימה נפתחת",
+            "צרופת\nדו\"ח ליקויים",
+            "..\\..\\..\\..\\..\\Downloads\\דוח ליקויים מבנה 100 פורמט מוסכם.xlsx",
+            "..\\..\\..\\..\\..\\Downloads\\להפצה 29.6.2025 דוח ליקויים מבנה 140 פורמט מוסכם (1).xlsx"
+          ]
+        },
+        "col_14": {
+          "total_values": 495,
+          "non_null_values": 27,
+          "null_values": 468,
+          "unique_values": 4,
+          "data_type": "text",
+          "sample_values": [
+            "רשימה נפתחת",
+            "האם\nהדו\"ח הופץ",
+            "לא",
+            "כן"
+          ]
+        },
+        "col_15": {
+          "total_values": 495,
+          "non_null_values": 5,
+          "null_values": 490,
+          "unique_values": 3,
+          "data_type": "date_string",
+          "sample_values": [
+            "DD/MM/YY",
+            "תאריך\nהפצת הדו\"ח",
+            "2025-06-23 00:00:00"
+          ]
+        },
+        "col_16": {
+          "total_values": 495,
+          "non_null_values": 24,
+          "null_values": 471,
+          "unique_values": 3,
+          "data_type": "text",
+          "sample_values": [
+            "רשימה נפתחת",
+            "בדיקה\nחוזרת",
+            "כן"
+          ]
+        },
+        "col_17": {
+          "total_values": 495,
+          "non_null_values": 19,
+          "null_values": 476,
+          "unique_values": 14,
+          "data_type": "text",
+          "sample_values": [
+            "התרשמות\nמהבדיקה",
+            "מוכנות המבנה נמוכה בעיקר במרתף לאחר סבב ראשון. ",
+            " יחסיתדוח ליקויים - הופץ לזכיין מוכנות המבנה גבוה לאחר סבב ראשון",
+            " יחסיתדוח ליקויים - הופץ לזכיין מוכנות המבנה גבוה לאחר סבב",
+            "מוכנות בינונית לאחר סבב ראשון -  טרם הוצב מכשור הספורט כולל סאבמיטל -   בדיקה כשהמכשור קיים תהיה יותר פרקטית"
+          ]
+        }
+      },
+      "hebrew_content": true,
+      "empty_cells": 6265,
+      "unique_values_count": {
+        "col_0": 28,
+        "col_1": 12,
+        "col_2": 7,
+        "col_3": 58,
+        "col_4": 9,
+        "col_5": 5,
+        "col_6": 14,
+        "col_7": 3,
+        "col_8": 3,
+        "col_9": 1,
+        "col_10": 49,
+        "col_11": 17,
+        "col_12": 3,
+        "col_13": 4,
+        "col_14": 4,
+        "col_15": 3,
+        "col_16": 3,
+        "col_17": 14
+      }
+    },
+    "ערכים": {
+      "sheet_name": "ערכים",
+      "dimensions": {
+        "rows": 55,
+        "columns": 22
+      },
+      "data_types": {
+        "col_0": "empty",
+        "col_1": "numeric_string",
+        "col_2": "empty",
+        "col_3": "text",
+        "col_4": "empty",
+        "col_5": "text",
+        "col_6": "empty",
+        "col_7": "text",
+        "col_8": "empty",
+        "col_9": "text",
+        "col_10": "empty",
+        "col_11": "numeric_string",
+        "col_12": "empty",
+        "col_13": "text",
+        "col_14": "empty",
+        "col_15": "text",
+        "col_16": "empty",
+        "col_17": "text",
+        "col_18": "empty",
+        "col_19": "text",
+        "col_20": "empty",
+        "col_21": "text"
+      },
+      "sample_data": {
+        "row_0": {
+          "col_0": null,
+          "col_1": null,
+          "col_2": null,
+          "col_3": null,
+          "col_4": null,
+          "col_5": null,
+          "col_6": null,
+          "col_7": null,
+          "col_8": null,
+          "col_9": null,
+          "col_10": null,
+          "col_11": null,
+          "col_12": null,
+          "col_13": null,
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null,
+          "col_18": null,
+          "col_19": null,
+          "col_20": null,
+          "col_21": null
+        },
+        "row_1": {
+          "col_0": null,
+          "col_1": "מבנה",
+          "col_2": null,
+          "col_3": "מנהל מבנה",
+          "col_4": null,
+          "col_5": "צוות אדום",
+          "col_6": null,
+          "col_7": "סוג בדיקה",
+          "col_8": null,
+          "col_9": "מוביל בדיקה",
+          "col_10": null,
+          "col_11": "סבב בדיקות",
+          "col_12": null,
+          "col_13": "רגולטור 1,2,3,4",
+          "col_14": null,
+          "col_15": "האם מתואם מול זכיין?",
+          "col_16": null,
+          "col_17": "צרופת דו\"ח ליקויים",
+          "col_18": null,
+          "col_19": "האם הדו\"ח הופץ",
+          "col_20": null,
+          "col_21": "בדיקה חוזרת"
+        },
+        "row_2": {
+          "col_0": null,
+          "col_1": "10A",
+          "col_2": null,
+          "col_3": "יוסי שמש",
+          "col_4": null,
+          "col_5": "דנה אבני + ציון לחיאני",
+          "col_6": null,
+          "col_7": "הנדסית",
+          "col_8": null,
+          "col_9": "יקיר נבון",
+          "col_10": null,
+          "col_11": "1",
+          "col_12": null,
+          "col_13": "אהו\"ב",
+          "col_14": null,
+          "col_15": "כן",
+          "col_16": null,
+          "col_17": "כן",
+          "col_18": null,
+          "col_19": "כן",
+          "col_20": null,
+          "col_21": "כן"
+        },
+        "row_3": {
+          "col_0": null,
+          "col_1": "10B",
+          "col_2": null,
+          "col_3": "ערן ברגיל",
+          "col_4": null,
+          "col_5": "שירן פיטוסי",
+          "col_6": null,
+          "col_7": "אפיונית",
+          "col_8": null,
+          "col_9": "זיו חג'בי",
+          "col_10": null,
+          "col_11": "2",
+          "col_12": null,
+          "col_13": "חושן",
+          "col_14": null,
+          "col_15": "לא",
+          "col_16": null,
+          "col_17": "לא",
+          "col_18": null,
+          "col_19": "לא",
+          "col_20": null,
+          "col_21": "לא"
+        },
+        "row_4": {
+          "col_0": null,
+          "col_1": "10C",
+          "col_2": null,
+          "col_3": "יקיר נבון",
+          "col_4": null,
+          "col_5": "עידן אוחיון",
+          "col_6": null,
+          "col_7": "תשתית פאסיבית פנים מבנה",
+          "col_8": null,
+          "col_9": "לירון קוטלר",
+          "col_10": null,
+          "col_11": "3",
+          "col_12": null,
+          "col_13": "מצו\"ב",
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null,
+          "col_18": null,
+          "col_19": null,
+          "col_20": null,
+          "col_21": null
+        },
+        "row_5": {
+          "col_0": null,
+          "col_1": "10D",
+          "col_2": null,
+          "col_3": "זיו חג'בי",
+          "col_4": null,
+          "col_5": "שירן + אורי",
+          "col_6": null,
+          "col_7": "תשתית פאסיבית בין מבנים",
+          "col_8": null,
+          "col_9": "טלי עיני",
+          "col_10": null,
+          "col_11": "4",
+          "col_12": null,
+          "col_13": "בטחון מידע",
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null,
+          "col_18": null,
+          "col_19": null,
+          "col_20": null,
+          "col_21": null
+        },
+        "row_6": {
+          "col_0": null,
+          "col_1": "20",
+          "col_2": null,
+          "col_3": "איציק דאבוש",
+          "col_4": null,
+          "col_5": "לירון קוטלר",
+          "col_6": null,
+          "col_7": "בינוי תומך תפעול",
+          "col_8": null,
+          "col_9": "מיכאל קפלון",
+          "col_10": null,
+          "col_11": null,
+          "col_12": null,
+          "col_13": "מזון",
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null,
+          "col_18": null,
+          "col_19": null,
+          "col_20": null,
+          "col_21": null
+        },
+        "row_7": {
+          "col_0": null,
+          "col_1": "30",
+          "col_2": null,
+          "col_3": "מיכאל קפלון",
+          "col_4": null,
+          "col_5": null,
+          "col_6": null,
+          "col_7": "רשת אקטיבית שמורה",
+          "col_8": null,
+          "col_9": " חן זוהר ראדה",
+          "col_10": null,
+          "col_11": null,
+          "col_12": null,
+          "col_13": "הגנת מחנות",
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null,
+          "col_18": null,
+          "col_19": null,
+          "col_20": null,
+          "col_21": null
+        },
+        "row_8": {
+          "col_0": null,
+          "col_1": "40",
+          "col_2": null,
+          "col_3": "חנוך חוטר",
+          "col_4": null,
+          "col_5": null,
+          "col_6": null,
+          "col_7": "רשת אקטיבית סודית",
+          "col_8": null,
+          "col_9": "יגאל גזמן",
+          "col_10": null,
+          "col_11": null,
+          "col_12": null,
+          "col_13": "רבנות",
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null,
+          "col_18": null,
+          "col_19": null,
+          "col_20": null,
+          "col_21": null
+        },
+        "row_9": {
+          "col_0": null,
+          "col_1": "50",
+          "col_2": null,
+          "col_3": "אורנית ג'יספאן",
+          "col_4": null,
+          "col_5": null,
+          "col_6": null,
+          "col_7": "רשת אקטיבית סודי ביותר",
+          "col_8": null,
+          "col_9": "לנה ספבק",
+          "col_10": null,
+          "col_11": null,
+          "col_12": null,
+          "col_13": "ברה\"צ",
+          "col_14": null,
+          "col_15": null,
+          "col_16": null,
+          "col_17": null,
+          "col_18": null,
+          "col_19": null,
+          "col_20": null,
+          "col_21": null
+        }
+      },
+      "column_analysis": {
+        "col_0": {
+          "total_values": 55,
+          "non_null_values": 0,
+          "null_values": 55,
+          "unique_values": 0,
+          "data_type": "empty",
+          "sample_values": []
+        },
+        "col_1": {
+          "total_values": 55,
+          "non_null_values": 28,
+          "null_values": 27,
+          "unique_values": 28,
+          "data_type": "numeric_string",
+          "sample_values": [
+            "מבנה",
+            "10A",
+            "10B",
+            "10C",
+            "10D"
+          ]
+        },
+        "col_2": {
+          "total_values": 55,
+          "non_null_values": 0,
+          "null_values": 55,
+          "unique_values": 0,
+          "data_type": "empty",
+          "sample_values": []
+        },
+        "col_3": {
+          "total_values": 55,
+          "non_null_values": 12,
+          "null_values": 43,
+          "unique_values": 12,
+          "data_type": "text",
+          "sample_values": [
+            "מנהל מבנה",
+            "יוסי שמש",
+            "ערן ברגיל",
+            "יקיר נבון",
+            "זיו חג'בי"
+          ]
+        },
+        "col_4": {
+          "total_values": 55,
+          "non_null_values": 0,
+          "null_values": 55,
+          "unique_values": 0,
+          "data_type": "empty",
+          "sample_values": []
+        },
+        "col_5": {
+          "total_values": 55,
+          "non_null_values": 6,
+          "null_values": 49,
+          "unique_values": 6,
+          "data_type": "text",
+          "sample_values": [
+            "צוות אדום",
+            "דנה אבני + ציון לחיאני",
+            "שירן פיטוסי",
+            "עידן אוחיון",
+            "שירן + אורי"
+          ]
+        },
+        "col_6": {
+          "total_values": 55,
+          "non_null_values": 0,
+          "null_values": 55,
+          "unique_values": 0,
+          "data_type": "empty",
+          "sample_values": []
+        },
+        "col_7": {
+          "total_values": 55,
+          "non_null_values": 54,
+          "null_values": 1,
+          "unique_values": 54,
+          "data_type": "text",
+          "sample_values": [
+            "סוג בדיקה",
+            "הנדסית",
+            "אפיונית",
+            "תשתית פאסיבית פנים מבנה",
+            "תשתית פאסיבית בין מבנים"
+          ]
+        },
+        "col_8": {
+          "total_values": 55,
+          "non_null_values": 0,
+          "null_values": 55,
+          "unique_values": 0,
+          "data_type": "empty",
+          "sample_values": []
+        },
+        "col_9": {
+          "total_values": 55,
+          "non_null_values": 32,
+          "null_values": 23,
+          "unique_values": 32,
+          "data_type": "text",
+          "sample_values": [
+            "מוביל בדיקה",
+            "יקיר נבון",
+            "זיו חג'בי",
+            "לירון קוטלר",
+            "טלי עיני"
+          ]
+        },
+        "col_10": {
+          "total_values": 55,
+          "non_null_values": 0,
+          "null_values": 55,
+          "unique_values": 0,
+          "data_type": "empty",
+          "sample_values": []
+        },
+        "col_11": {
+          "total_values": 55,
+          "non_null_values": 5,
+          "null_values": 50,
+          "unique_values": 5,
+          "data_type": "numeric_string",
+          "sample_values": [
+            "סבב בדיקות",
+            "1",
+            "2",
+            "3",
+            "4"
+          ]
+        },
+        "col_12": {
+          "total_values": 55,
+          "non_null_values": 0,
+          "null_values": 55,
+          "unique_values": 0,
+          "data_type": "empty",
+          "sample_values": []
+        },
+        "col_13": {
+          "total_values": 55,
+          "non_null_values": 19,
+          "null_values": 36,
+          "unique_values": 19,
+          "data_type": "text",
+          "sample_values": [
+            "רגולטור 1,2,3,4",
+            "אהו\"ב",
+            "חושן",
+            "מצו\"ב",
+            "בטחון מידע"
+          ]
+        },
+        "col_14": {
+          "total_values": 55,
+          "non_null_values": 0,
+          "null_values": 55,
+          "unique_values": 0,
+          "data_type": "empty",
+          "sample_values": []
+        },
+        "col_15": {
+          "total_values": 55,
+          "non_null_values": 3,
+          "null_values": 52,
+          "unique_values": 3,
+          "data_type": "text",
+          "sample_values": [
+            "האם מתואם מול זכיין?",
+            "כן",
+            "לא"
+          ]
+        },
+        "col_16": {
+          "total_values": 55,
+          "non_null_values": 0,
+          "null_values": 55,
+          "unique_values": 0,
+          "data_type": "empty",
+          "sample_values": []
+        },
+        "col_17": {
+          "total_values": 55,
+          "non_null_values": 3,
+          "null_values": 52,
+          "unique_values": 3,
+          "data_type": "text",
+          "sample_values": [
+            "צרופת דו\"ח ליקויים",
+            "כן",
+            "לא"
+          ]
+        },
+        "col_18": {
+          "total_values": 55,
+          "non_null_values": 0,
+          "null_values": 55,
+          "unique_values": 0,
+          "data_type": "empty",
+          "sample_values": []
+        },
+        "col_19": {
+          "total_values": 55,
+          "non_null_values": 3,
+          "null_values": 52,
+          "unique_values": 3,
+          "data_type": "text",
+          "sample_values": [
+            "האם הדו\"ח הופץ",
+            "כן",
+            "לא"
+          ]
+        },
+        "col_20": {
+          "total_values": 55,
+          "non_null_values": 0,
+          "null_values": 55,
+          "unique_values": 0,
+          "data_type": "empty",
+          "sample_values": []
+        },
+        "col_21": {
+          "total_values": 55,
+          "non_null_values": 3,
+          "null_values": 52,
+          "unique_values": 3,
+          "data_type": "text",
+          "sample_values": [
+            "בדיקה חוזרת",
+            "כן",
+            "לא"
+          ]
+        }
+      },
+      "hebrew_content": true,
+      "empty_cells": 1042,
+      "unique_values_count": {
+        "col_0": 0,
+        "col_1": 28,
+        "col_2": 0,
+        "col_3": 12,
+        "col_4": 0,
+        "col_5": 6,
+        "col_6": 0,
+        "col_7": 54,
+        "col_8": 0,
+        "col_9": 32,
+        "col_10": 0,
+        "col_11": 5,
+        "col_12": 0,
+        "col_13": 19,
+        "col_14": 0,
+        "col_15": 3,
+        "col_16": 0,
+        "col_17": 3,
+        "col_18": 0,
+        "col_19": 3,
+        "col_20": 0,
+        "col_21": 3
+      }
+    }
+  },
+  "summary": {
+    "total_sheets": 2,
+    "sheet_names": [
+      "טבלה מרכזת",
+      "ערכים"
+    ]
+  }
+}
