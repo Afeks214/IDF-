@@ -108,14 +108,19 @@ class Settings(BaseSettings):
     
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://idf_user:secure_password@localhost:5432/idf_testing"
-    DATABASE_POOL_SIZE: int = 10
-    DATABASE_MAX_OVERFLOW: int = 20
-    DATABASE_POOL_TIMEOUT: int = 30
+    DB_POOL_SIZE: int = 20
+    DB_MAX_OVERFLOW: int = 40
+    DB_POOL_TIMEOUT: int = 30
+    DB_POOL_RECYCLE: int = 3600
+    DB_ECHO: bool = False
+    QUERY_TIMEOUT: int = 30
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
     REDIS_PASSWORD: Optional[str] = None
     REDIS_SSL: bool = False
+    REDIS_POOL_SIZE: int = 10
+    REDIS_SESSION_TTL: int = 3600  # 1 hour
     
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []

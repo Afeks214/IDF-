@@ -5,8 +5,10 @@ import { I18nextProvider } from 'react-i18next';
 import { store, useAppDispatch, useAppSelector } from './store';
 import { getCurrentUser, logoutUser } from './store/authSlice';
 import RTLProvider from './components/providers/RTLProvider';
+import PWAProvider from './components/pwa/PWAProvider';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AppLayout from './components/layout/AppLayout';
+import MobileNavigation from './components/mobile/MobileNavigation';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import BuildingsPage from './pages/BuildingsPage';
@@ -77,6 +79,7 @@ const AppContent: React.FC = () => {
               <AppLayout onLogout={handleLogout} user={user ? { name: user.name, role: user.role } : undefined}>
                 <DashboardPage />
               </AppLayout>
+              <MobileNavigation />
             </ProtectedRoute>
           }
         />
@@ -88,6 +91,7 @@ const AppContent: React.FC = () => {
               <AppLayout onLogout={handleLogout} user={user ? { name: user.name, role: user.role } : undefined}>
                 <BuildingsPage />
               </AppLayout>
+              <MobileNavigation />
             </ProtectedRoute>
           }
         />
@@ -99,6 +103,7 @@ const AppContent: React.FC = () => {
               <AppLayout onLogout={handleLogout} user={user ? { name: user.name, role: user.role } : undefined}>
                 <TestsPage />
               </AppLayout>
+              <MobileNavigation />
             </ProtectedRoute>
           }
         />
@@ -110,6 +115,7 @@ const AppContent: React.FC = () => {
               <AppLayout onLogout={handleLogout} user={user ? { name: user.name, role: user.role } : undefined}>
                 <ReportsPage />
               </AppLayout>
+              <MobileNavigation />
             </ProtectedRoute>
           }
         />
@@ -149,7 +155,9 @@ const App: React.FC = () => {
     <Provider store={store}>
       <I18nextProvider i18n={i18n}>
         <RTLProvider>
-          <AppContent />
+          <PWAProvider>
+            <AppContent />
+          </PWAProvider>
         </RTLProvider>
       </I18nextProvider>
     </Provider>

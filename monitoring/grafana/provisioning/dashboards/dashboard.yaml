@@ -1,0 +1,48 @@
+# IDF Testing Infrastructure - Grafana Dashboard Provisioning
+# Automatic dashboard deployment for military-grade monitoring
+
+apiVersion: 1
+
+providers:
+  - name: 'idf-dashboards'
+    orgId: 1
+    folder: 'IDF Testing Infrastructure'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+
+  - name: 'idf-performance'
+    orgId: 1
+    folder: 'Performance Monitoring'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true
+
+  - name: 'idf-security'
+    orgId: 1
+    folder: 'Security Monitoring'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true
+
+  - name: 'idf-infrastructure'
+    orgId: 1
+    folder: 'Infrastructure Monitoring'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true

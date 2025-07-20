@@ -1,0 +1,33 @@
+# Security System Dependencies for IDF Testing Infrastructure
+
+# Core Security
+passlib[bcrypt]==1.7.4        # Password hashing with bcrypt
+python-jose[cryptography]==3.3.0  # JWT token handling
+bcrypt==4.0.1                 # Password hashing algorithm
+
+# Redis for caching and sessions
+redis==5.0.1                  # Redis client
+aioredis==2.0.1              # Async Redis client
+
+# Structured logging
+structlog==23.2.0            # Structured logging
+
+# Optional GeoIP support
+geoip2==4.7.0                # GeoIP database support
+maxminddb==2.2.0             # MaxMind database reader
+
+# Data validation
+pydantic==2.4.2              # Data validation and settings
+pydantic-settings==2.0.3     # Settings management
+
+# HTTP and web framework
+fastapi==0.104.1             # Web framework
+uvicorn==0.24.0              # ASGI server
+
+# Database
+asyncpg==0.29.0              # PostgreSQL async driver
+sqlalchemy==2.0.23           # ORM
+
+# Other utilities
+python-multipart==0.0.6     # File uploads
+aiofiles==23.2.1             # Async file operations

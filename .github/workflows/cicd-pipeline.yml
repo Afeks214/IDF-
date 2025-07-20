@@ -1,0 +1,445 @@
+# IDF Testing Infrastructure - CI/CD Pipeline
+# Military-grade deployment automation with security scanning and monitoring
+
+name: IDF Testing Infrastructure CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly security scan
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH,MEDIUM'
+        exit-code: '1'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: Run Bandit security linter
+      run: |
+        pip install bandit[toml]
+        bandit -r backend/ -f json -o bandit-results.json || true
+
+    - name: Run Semgrep security analysis
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: >-
+          p/security-audit
+          p/secrets
+          p/python
+          p/javascript
+          p/typescript
+          p/docker
+        generateSarif: "1"
+
+    - name: Upload Semgrep results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: semgrep.sarif
+
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install Python dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        pip install pytest pytest-cov flake8 black mypy
+
+    - name: Install Node.js dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Run Python linting
+      run: |
+        cd backend
+        flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 app/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Run Python type checking
+      run: |
+        cd backend
+        mypy app/ --ignore-missing-imports
+
+    - name: Run Python formatting check
+      run: |
+        cd backend
+        black --check app/
+
+    - name: Run Python tests
+      run: |
+        cd backend
+        pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+
+    - name: Run TypeScript linting
+      run: |
+        cd frontend
+        npm run lint
+
+    - name: Run TypeScript type checking
+      run: |
+        cd frontend
+        npm run type-check
+
+    - name: Run frontend tests
+      run: |
+        cd frontend
+        npm test -- --coverage --watchAll=false
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./backend/coverage.xml,./frontend/coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: [security-scan, code-quality]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        file: ./backend/Dockerfile
+        push: false
+        tags: idf-testing/backend:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        file: ./frontend/Dockerfile
+        push: false
+        tags: idf-testing/frontend:test
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Set up test environment
+      run: |
+        cp config/production.env.template .env
+        echo "SECRET_KEY=test-secret-key" >> .env
+        echo "POSTGRES_PASSWORD=test-password" >> .env
+        echo "REDIS_PASSWORD=test-redis-password" >> .env
+        echo "GRAFANA_PASSWORD=test-grafana-password" >> .env
+
+    - name: Run integration tests
+      run: |
+        docker-compose -f docker-compose.yml up -d postgres redis
+        sleep 30
+        docker-compose -f docker-compose.yml run --rm backend python -m pytest tests/integration/ -v
+        docker-compose -f docker-compose.yml down
+
+    - name: Run performance tests
+      run: |
+        docker-compose -f docker-compose.yml up -d
+        sleep 60
+        docker-compose -f docker-compose.yml run --rm backend python -m pytest tests/load_testing/ -v
+        docker-compose -f docker-compose.yml down
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build, tag, and push images
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: idf-testing
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY/backend:$IMAGE_TAG ./backend
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY/frontend:$IMAGE_TAG ./frontend
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY/backend:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY/frontend:$IMAGE_TAG
+
+    - name: Configure kubectl
+      uses: aws-actions/configure-kubectl@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+        cluster-name: idf-testing-staging
+
+    - name: Deploy to staging
+      env:
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        kubectl set image deployment/backend backend=$ECR_REGISTRY/$ECR_REPOSITORY/backend:$IMAGE_TAG -n idf-testing-staging
+        kubectl set image deployment/frontend frontend=$ECR_REGISTRY/$ECR_REPOSITORY/frontend:$IMAGE_TAG -n idf-testing-staging
+        kubectl rollout status deployment/backend -n idf-testing-staging
+        kubectl rollout status deployment/frontend -n idf-testing-staging
+
+    - name: Run smoke tests
+      run: |
+        kubectl run smoke-test --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          sh -c "curl -f http://backend-service:8000/health && curl -f http://frontend-service:3000/health"
+
+    - name: Notify deployment status
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#idf-deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        message: |
+          Staging deployment ${{ job.status }}!
+          Commit: ${{ github.sha }}
+          Branch: ${{ github.ref }}
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-test]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build, tag, and push images
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: idf-testing
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY/backend:$IMAGE_TAG ./backend
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY/frontend:$IMAGE_TAG ./frontend
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY/backend:latest ./backend
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY/frontend:latest ./frontend
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY/backend:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY/frontend:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY/backend:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY/frontend:latest
+
+    - name: Configure kubectl
+      uses: aws-actions/configure-kubectl@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+        cluster-name: idf-testing-production
+
+    - name: Create database backup
+      run: |
+        kubectl create job --from=cronjob/postgres-backup backup-$(date +%Y%m%d-%H%M%S) -n idf-testing
+
+    - name: Deploy to production with blue-green strategy
+      env:
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Deploy to green environment
+        kubectl set image deployment/backend-green backend=$ECR_REGISTRY/$ECR_REPOSITORY/backend:$IMAGE_TAG -n idf-testing
+        kubectl set image deployment/frontend-green frontend=$ECR_REGISTRY/$ECR_REPOSITORY/frontend:$IMAGE_TAG -n idf-testing
+        kubectl rollout status deployment/backend-green -n idf-testing
+        kubectl rollout status deployment/frontend-green -n idf-testing
+        
+        # Run health checks
+        kubectl wait --for=condition=available --timeout=300s deployment/backend-green -n idf-testing
+        kubectl wait --for=condition=available --timeout=300s deployment/frontend-green -n idf-testing
+        
+        # Switch traffic to green
+        kubectl patch service backend-service -p '{"spec":{"selector":{"version":"green"}}}' -n idf-testing
+        kubectl patch service frontend-service -p '{"spec":{"selector":{"version":"green"}}}' -n idf-testing
+        
+        # Wait for traffic switch
+        sleep 30
+        
+        # Update blue environment
+        kubectl set image deployment/backend backend=$ECR_REGISTRY/$ECR_REPOSITORY/backend:$IMAGE_TAG -n idf-testing
+        kubectl set image deployment/frontend frontend=$ECR_REGISTRY/$ECR_REPOSITORY/frontend:$IMAGE_TAG -n idf-testing
+
+    - name: Run production smoke tests
+      run: |
+        kubectl run prod-smoke-test --image=curlimages/curl:latest --rm -i --restart=Never -- \
+          sh -c "curl -f https://api.idf-testing.mil.il/health && curl -f https://idf-testing.mil.il/health"
+
+    - name: Update monitoring alerts
+      run: |
+        kubectl apply -f monitoring/alert-rules.yml
+        kubectl rollout restart deployment/prometheus -n monitoring
+
+    - name: Notify deployment status
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        channel: '#idf-deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        message: |
+          🚀 Production deployment ${{ job.status }}!
+          Commit: ${{ github.sha }}
+          Branch: ${{ github.ref }}
+          Environment: https://idf-testing.mil.il
+
+  disaster-recovery-test:
+    name: Disaster Recovery Test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Test backup restoration
+      run: |
+        # Create test database
+        kubectl create job test-db-restore --from=cronjob/postgres-backup -n idf-testing-dr
+        kubectl wait --for=condition=complete --timeout=600s job/test-db-restore -n idf-testing-dr
+        
+        # Validate backup integrity
+        kubectl run backup-validation --image=postgres:15-alpine --rm -i --restart=Never -- \
+          sh -c "pg_dump --schema-only -h postgres-dr -U idf_user idf_testing > /tmp/schema.sql && echo 'Backup validation successful'"
+
+    - name: Test failover procedures
+      run: |
+        # Test DNS failover
+        kubectl patch service backend-service -p '{"spec":{"selector":{"region":"dr"}}}' -n idf-testing
+        sleep 60
+        curl -f https://api.idf-testing.mil.il/health
+        
+        # Restore normal operation
+        kubectl patch service backend-service -p '{"spec":{"selector":{"region":"primary"}}}' -n idf-testing
+
+    - name: Generate DR report
+      run: |
+        echo "Disaster Recovery Test Report" > dr-report.txt
+        echo "Date: $(date)" >> dr-report.txt
+        echo "Status: ${{ job.status }}" >> dr-report.txt
+        echo "Backup Size: $(kubectl get pvc backup-pvc -o jsonpath='{.status.capacity.storage}' -n idf-testing)" >> dr-report.txt
+
+    - name: Upload DR report
+      uses: actions/upload-artifact@v3
+      with:
+        name: disaster-recovery-report
+        path: dr-report.txt
+
+  compliance-audit:
+    name: Compliance Audit
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run compliance checks
+      run: |
+        # Check for hardcoded secrets
+        grep -r "password\|secret\|key" --include="*.py" --include="*.js" --include="*.ts" --include="*.yaml" --include="*.yml" . || true
+        
+        # Check for proper logging
+        grep -r "logging\|log\|audit" --include="*.py" backend/ || true
+        
+        # Check for security headers
+        grep -r "CSP\|HSTS\|X-Frame-Options" --include="*.py" --include="*.js" --include="*.ts" . || true
+
+    - name: Generate compliance report
+      run: |
+        echo "Compliance Audit Report" > compliance-report.txt
+        echo "Date: $(date)" >> compliance-report.txt
+        echo "Repository: ${{ github.repository }}" >> compliance-report.txt
+        echo "Commit: ${{ github.sha }}" >> compliance-report.txt
+
+    - name: Upload compliance report
+      uses: actions/upload-artifact@v3
+      with:
+        name: compliance-audit-report
+        path: compliance-report.txt

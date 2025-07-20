@@ -85,7 +85,7 @@
     }
   },
   "dashboard": {
-    "title": "לוח בקרה",
+    "title": "לוח בקרה - כשירות מבנים",
     "overview": "סקירה כללית",
     "totalBuildings": "סה\"כ מבנים",
     "totalTests": "סה\"כ בדיקות",
@@ -94,7 +94,21 @@
     "recentActivity": "פעילות אחרונה",
     "testsByType": "בדיקות לפי סוג",
     "testsByStatus": "בדיקות לפי סטטוס",
-    "monthlyTrend": "מגמה חודשית"
+    "monthlyTrend": "מגמה חודשית",
+    "buildingReadiness": "כשירות מבנה",
+    "generalReadiness": "כשירות כללי",
+    "engineeringReadiness": "כשירות הנדסי",
+    "operationalReadiness": "כשירות תפעולי",
+    "excellentReadiness": "כשירות מעולה",
+    "goodReadiness": "כשירות טובה",
+    "needsImprovement": "דורש שיפור",
+    "totalSystemRecords": "רשומות במערכת",
+    "lastUpdate": "עדכון אחרון",
+    "refreshData": "רענן נתונים",
+    "buildingHierarchy": "היררכיית מבנים",
+    "floorDetails": "פרטי קומות",
+    "readinessScore": "ציון כשירות",
+    "trend": "מגמה"
   },
   "reports": {
     "title": "דוחות",

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אין חיבור לאינטרנט - מערכת בדיקות IDF</title>
+    <style>
+        body {
+            font-family: 'Heebo', 'Arial', sans-serif;
+            direction: rtl;
+            text-align: center;
+            padding: 2rem;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            color: #333;
+        }
+        .icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+        h1 {
+            color: #dc2626;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        p {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        .retry-btn {
+            background: #2563eb;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            margin: 0.5rem;
+        }
+        .retry-btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        .features {
+            margin-top: 2rem;
+            text-align: right;
+        }
+        .feature {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 10px;
+            border-right: 4px solid #3b82f6;
+        }
+        .feature strong {
+            color: #1e40af;
+        }
+        .status {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            background: #1976d2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🛡️</div>
+        <h1>אין חיבור לאינטרנט</h1>
+        <p>לא ניתן להתחבר לשרת מערכת בדיקות IDF. אנא בדוק את החיבור שלך לאינטרנט ונסה שוב.</p>
+        
+        <div class="status">
+            <strong>סטטוס:</strong> <span id="connection-status">בודק חיבור...</span>
+        </div>
+        
+        <button class="retry-btn" onclick="checkConnection()">🔄 בדוק חיבור</button>
+        <button class="retry-btn" onclick="window.location.reload()">🔄 טען מחדש</button>
+        
+        <div class="features">
+            <h3>פונקציות זמינות במצב לא מקוון:</h3>
+            <div class="feature">
+                <strong>צפייה בנתונים שנשמרו:</strong> ניתן לצפות בנתונים שנטענו בעבר ונשמרו במכשיר
+            </div>
+            <div class="feature">
+                <strong>עריכה מקומית:</strong> ניתן לערוך נתונים, הם יסתנכרנו בחזרת החיבור
+            </div>
+            <div class="feature">
+                <strong>ניווט באפליקציה:</strong> ניתן לנוע בין הדפים השונים שנטענו בעבר
+            </div>
+            <div class="feature">
+                <strong>עבודה מתמשכת:</strong> האפליקציה תמשיך לעבוד עם הנתונים הקיימים
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkConnection() {
+            const statusElement = document.getElementById('connection-status');
+            statusElement.textContent = 'בודק...';
+            
+            if (navigator.onLine) {
+                statusElement.textContent = 'מחובר לאינטרנט';
+                statusElement.style.color = '#059669';
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                statusElement.textContent = 'לא מחובר לאינטרנט';
+                statusElement.style.color = '#dc2626';
+            }
+        }
+
+        // Auto-check connection every 5 seconds
+        setInterval(checkConnection, 5000);
+        
+        // Check on page load
+        window.addEventListener('load', checkConnection);
+        
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            const statusElement = document.getElementById('connection-status');
+            statusElement.textContent = 'חיבור חודש!';
+            statusElement.style.color = '#059669';
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        });
+        
+        window.addEventListener('offline', () => {
+            const statusElement = document.getElementById('connection-status');
+            statusElement.textContent = 'חיבור אבד';
+            statusElement.style.color = '#dc2626';
+        });
+    </script>
+</body>
+</html>

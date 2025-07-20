@@ -519,6 +519,128 @@ docker pull redis:7-alpine
 ./scripts/deployment-manager.sh test
 ```
 
+## Advanced Deployment Features
+
+### Enhanced Docker Compose Configuration
+
+The enhanced `docker-compose.yml` now includes:
+
+- **Comprehensive Monitoring Stack**: Prometheus, Grafana, Alertmanager, Node Exporter, Blackbox Exporter
+- **Log Aggregation**: Elasticsearch, Logstash, Kibana (ELK Stack)
+- **Distributed Tracing**: Jaeger for request tracing
+- **Secrets Management**: HashiCorp Vault for secure secrets storage
+- **Database Monitoring**: PostgreSQL and Redis exporters
+- **Automated Backups**: Scheduled database backups with retention
+- **Security Scanning**: Integrated vulnerability scanning
+
+### Kubernetes Enhancements
+
+#### New Kubernetes Resources
+
+- **Network Policies**: Comprehensive network segmentation and security
+- **Storage Classes**: Optimized storage configurations for different workloads
+- **Horizontal Pod Autoscalers**: Automatic scaling based on CPU/memory metrics
+- **Service Monitors**: Prometheus service discovery for monitoring
+- **Ingress with TLS**: Secure external access with SSL termination
+
+#### Advanced Security Features
+
+- **Pod Security Standards**: Enforced security contexts and capabilities
+- **RBAC**: Role-based access control for fine-grained permissions
+- **Network Segmentation**: Isolated namespaces and network policies
+- **Encrypted Storage**: All persistent volumes encrypted at rest
+
+### CI/CD Pipeline Enhancements
+
+#### GitHub Actions Workflow
+
+The enhanced CI/CD pipeline includes:
+
+- **Multi-stage Security Scanning**: Trivy, Bandit, Semgrep integration
+- **Code Quality Analysis**: Linting, type checking, formatting validation
+- **Comprehensive Testing**: Unit, integration, and performance tests
+- **Blue-Green Deployment**: Zero-downtime deployments
+- **Automated Rollbacks**: Automatic rollback on deployment failures
+- **Compliance Checking**: Continuous compliance validation
+
+#### Deployment Automation Scripts
+
+- **`deployment-manager.sh`**: Enhanced deployment orchestration
+- **`ci-cd-automation.sh`**: Comprehensive CI/CD pipeline automation
+- **Advanced monitoring and alerting integration**
+- **Automated backup verification**
+- **Security compliance reporting**
+
+### Monitoring and Observability
+
+#### Enhanced Grafana Dashboards
+
+- **Performance Dashboard**: Application metrics and SLA tracking
+- **Security Dashboard**: Real-time security monitoring and threat detection
+- **Infrastructure Dashboard**: System metrics and resource utilization
+- **Business Metrics**: Usage analytics and performance indicators
+
+#### Alert Management
+
+- **Comprehensive Alert Rules**: Performance, security, and system alerts
+- **Multi-channel Notifications**: Slack, email, and webhook integration
+- **Escalation Policies**: Tiered alerting based on severity
+- **Alert Correlation**: Intelligent grouping and deduplication
+
+### Production Readiness Checklist
+
+#### Pre-Deployment
+
+- [ ] Security scan passes with no critical vulnerabilities
+- [ ] All tests pass (unit, integration, performance)
+- [ ] Configuration values updated from templates
+- [ ] SSL certificates configured
+- [ ] Backup systems tested and verified
+- [ ] Monitoring dashboards configured
+- [ ] Alert rules tested and validated
+
+#### Post-Deployment
+
+- [ ] Health checks pass for all services
+- [ ] Monitoring metrics are being collected
+- [ ] Alerting system is functional
+- [ ] Backup scheduling is active
+- [ ] Security scans are scheduled
+- [ ] Documentation is updated
+- [ ] Team is trained on new features
+
+### Performance Optimization
+
+#### Resource Allocation
+
+- **CPU and Memory Limits**: Optimized for Hebrew text processing workloads
+- **Storage Configuration**: High-performance SSD storage classes
+- **Network Optimization**: Efficient service mesh configuration
+- **Database Tuning**: Optimized PostgreSQL parameters for Hebrew data
+
+#### Scaling Strategy
+
+- **Horizontal Pod Autoscaling**: Based on CPU, memory, and custom metrics
+- **Vertical Pod Autoscaling**: Dynamic resource allocation
+- **Cluster Autoscaling**: Automatic node provisioning
+- **Database Read Replicas**: Distributed read workloads
+
+### Disaster Recovery
+
+#### Backup Strategy
+
+- **Multi-tier Backups**: Full, incremental, and continuous backups
+- **Geographic Distribution**: Backups stored in multiple regions
+- **Encryption**: AES-256 encryption for all backup data
+- **Automated Testing**: Regular backup restoration testing
+
+#### Recovery Procedures
+
+- **RTO (Recovery Time Objective)**: < 30 minutes for critical services
+- **RPO (Recovery Point Objective)**: < 5 minutes data loss
+- **Failover Testing**: Monthly disaster recovery drills
+- **Documentation**: Detailed recovery procedures and runbooks
+
 ## Support and Contact
 
 For support and questions:

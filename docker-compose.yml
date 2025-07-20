@@ -134,6 +134,8 @@ services:
     container_name: idf_grafana
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-clock-panel,grafana-simple-json-datasource
     ports:
       - "3002:3000"
     volumes:
@@ -146,12 +148,222 @@ services:
     profiles:
       - monitoring
 
+  # Alertmanager for Prometheus
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: idf_alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # PostgreSQL Exporter for Prometheus
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: idf_postgres_exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://idf_user:${POSTGRES_PASSWORD:-dev_password_change_in_production}@postgres:5432/idf_testing?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Redis Exporter for Prometheus
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: idf_redis_exporter
+    environment:
+      REDIS_ADDR: "redis://redis:6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dev_redis_password}
+    ports:
+      - "9121:9121"
+    depends_on:
+      - redis
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Node Exporter for system metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: idf_node_exporter
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Blackbox Exporter for endpoint monitoring
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: idf_blackbox_exporter
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./monitoring/blackbox.yml:/config/blackbox.yml
+    command:
+      - '--config.file=/config/blackbox.yml'
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Elasticsearch for log aggregation
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: idf_elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=idf-logs
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - logging
+
+  # Kibana for log visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: idf_kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - logging
+
+  # Logstash for log processing
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: idf_logstash
+    volumes:
+      - ./monitoring/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./backend/logs:/var/log/backend:ro
+    ports:
+      - "5044:5044"
+    depends_on:
+      - elasticsearch
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - logging
+
+  # Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: idf_jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - tracing
+
+  # Vault for secrets management
+  vault:
+    image: vault:latest
+    container_name: idf_vault
+    cap_add:
+      - IPC_LOCK
+    environment:
+      - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_ROOT_TOKEN:-dev_vault_token}
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+    ports:
+      - "8200:8200"
+    volumes:
+      - vault_data:/vault/data
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - security
+
+  # Backup service using pg_dump
+  backup:
+    image: postgres:15-alpine
+    container_name: idf_backup
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-dev_password_change_in_production}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup-system.sh:/backup-system.sh
+    command: |
+      sh -c '
+        while true; do
+          echo "Running backup at $$(date)"
+          pg_dump -h postgres -U idf_user -d idf_testing > /backups/backup_$$(date +%Y%m%d_%H%M%S).sql
+          find /backups -name "backup_*.sql" -mtime +7 -delete
+          sleep 86400
+        done
+      '
+    depends_on:
+      - postgres
+    networks:
+      - idf_network
+    restart: unless-stopped
+    profiles:
+      - backup
+
 volumes:
   postgres_data:
   redis_data:
   uploaded_files:
   prometheus_data:
   grafana_data:
+  alertmanager_data:
+  elasticsearch_data:
+  vault_data:
 
 networks:
   idf_network:

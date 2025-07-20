@@ -1,0 +1,124 @@
+# IDF Testing Infrastructure - Blackbox Exporter Configuration
+# Military-grade endpoint monitoring for critical services
+
+modules:
+  # HTTP 2xx probe
+  http_2xx:
+    prober: http
+    timeout: 10s
+    http:
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      valid_status_codes: [200, 201, 202, 204]
+      method: GET
+      headers:
+        Host: idf-testing.mil.il
+        User-Agent: "IDF-Testing-Monitor/1.0"
+      no_follow_redirects: false
+      fail_if_ssl: false
+      fail_if_not_ssl: false
+      tls_config:
+        insecure_skip_verify: false
+      preferred_ip_protocol: "ip4"
+
+  # HTTP POST probe
+  http_post_2xx:
+    prober: http
+    timeout: 10s
+    http:
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      valid_status_codes: [200, 201, 202, 204]
+      method: POST
+      headers:
+        Content-Type: "application/json"
+        User-Agent: "IDF-Testing-Monitor/1.0"
+      body: '{"health":"check"}'
+
+  # HTTPS probe with SSL verification
+  https_2xx:
+    prober: http
+    timeout: 10s
+    http:
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      valid_status_codes: [200, 201, 202, 204]
+      method: GET
+      headers:
+        Host: idf-testing.mil.il
+        User-Agent: "IDF-Testing-Monitor/1.0"
+      no_follow_redirects: false
+      fail_if_ssl: false
+      fail_if_not_ssl: true
+      tls_config:
+        insecure_skip_verify: false
+      preferred_ip_protocol: "ip4"
+
+  # API health check
+  api_health:
+    prober: http
+    timeout: 5s
+    http:
+      valid_http_versions: ["HTTP/1.1", "HTTP/2.0"]
+      valid_status_codes: [200]
+      method: GET
+      headers:
+        User-Agent: "IDF-Testing-Health-Check/1.0"
+        Accept: "application/json"
+      body: ""
+
+  # Database connectivity check
+  tcp_connect:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: "ip4"
+
+  # DNS probe
+  dns:
+    prober: dns
+    timeout: 5s
+    dns:
+      query_name: "idf-testing.mil.il"
+      query_type: "A"
+      valid_rcodes:
+        - NOERROR
+      validate_answer_rrs:
+        fail_if_matches_regexp:
+          - ".*127.0.0.1"
+        fail_if_not_matches_regexp:
+          - ".*"
+      preferred_ip_protocol: "ip4"
+
+  # ICMP probe
+  icmp:
+    prober: icmp
+    timeout: 5s
+    icmp:
+      preferred_ip_protocol: "ip4"
+      source_ip_address: ""
+      payload_size: 64
+      dont_fragment: false
+
+  # SSH probe
+  ssh_banner:
+    prober: tcp
+    timeout: 10s
+    tcp:
+      query_response:
+        - expect: "^SSH-2.0-"
+      preferred_ip_protocol: "ip4"
+
+  # Redis probe
+  redis_connect:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      query_response:
+        - send: "PING"
+        - expect: "PONG"
+      preferred_ip_protocol: "ip4"
+
+  # PostgreSQL probe
+  postgres_connect:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: "ip4"

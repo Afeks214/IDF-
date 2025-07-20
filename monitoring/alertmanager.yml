@@ -1,0 +1,137 @@
+# IDF Testing Infrastructure - Alertmanager Configuration
+# Military-grade alerting system for critical infrastructure monitoring
+
+global:
+  # SMTP configuration for email alerts
+  smtp_smarthost: 'localhost:587'
+  smtp_from: 'alerts@idf-testing.mil.il'
+  smtp_auth_username: 'alerts@idf-testing.mil.il'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+  smtp_require_tls: true
+
+# Alert routing configuration
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'idf-ops-team'
+  routes:
+    # Critical alerts go to multiple channels
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 10s
+      repeat_interval: 1h
+    
+    # Database alerts
+    - match:
+        service: database
+      receiver: 'database-team'
+      group_wait: 30s
+      repeat_interval: 2h
+    
+    # Security alerts
+    - match:
+        alert_type: security
+      receiver: 'security-team'
+      group_wait: 5s
+      repeat_interval: 30m
+
+# Notification receivers
+receivers:
+  - name: 'idf-ops-team'
+    email_configs:
+      - to: 'ops-team@idf-testing.mil.il'
+        subject: 'IDF Testing Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Instance: {{ .Labels.instance }}
+          Severity: {{ .Labels.severity }}
+          Time: {{ .StartsAt }}
+          {{ end }}
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#idf-ops-alerts'
+        title: 'IDF Testing Alert'
+        text: |
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Severity:* {{ .Labels.severity }}
+          *Instance:* {{ .Labels.instance }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+
+  - name: 'critical-alerts'
+    email_configs:
+      - to: 'critical-alerts@idf-testing.mil.il'
+        subject: 'CRITICAL: IDF Testing System Alert'
+        body: |
+          CRITICAL ALERT DETECTED
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Instance: {{ .Labels.instance }}
+          Time: {{ .StartsAt }}
+          {{ end }}
+          
+          Immediate action required!
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#idf-critical-alerts'
+        title: '🚨 CRITICAL IDF Testing Alert'
+        text: |
+          @channel CRITICAL ALERT!
+          {{ range .Alerts }}
+          *Alert:* {{ .Annotations.summary }}
+          *Instance:* {{ .Labels.instance }}
+          *Description:* {{ .Annotations.description }}
+          {{ end }}
+
+  - name: 'database-team'
+    email_configs:
+      - to: 'database-team@idf-testing.mil.il'
+        subject: 'Database Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          Database Alert Detected
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Database: {{ .Labels.database }}
+          Instance: {{ .Labels.instance }}
+          Time: {{ .StartsAt }}
+          {{ end }}
+
+  - name: 'security-team'
+    email_configs:
+      - to: 'security-team@idf-testing.mil.il'
+        subject: 'SECURITY ALERT: {{ .GroupLabels.alertname }}'
+        body: |
+          SECURITY ALERT DETECTED
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Source: {{ .Labels.instance }}
+          Time: {{ .StartsAt }}
+          {{ end }}
+          
+          Please investigate immediately!
+
+# Inhibition rules to prevent alert spam
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'cluster', 'service']
+  
+  - source_match:
+      alertname: 'InstanceDown'
+    target_match_re:
+      alertname: '.*'
+    equal: ['instance']

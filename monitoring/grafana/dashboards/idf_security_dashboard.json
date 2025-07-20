@@ -1,0 +1,479 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "IDF Testing Infrastructure - Security Monitoring Dashboard",
+    "tags": ["idf", "security", "monitoring", "alerts"],
+    "style": "dark",
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Security Status Overview",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 24, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "idf:security_score",
+            "legendFormat": "Security Score",
+            "refId": "A"
+          },
+          {
+            "expr": "idf:active_threats",
+            "legendFormat": "Active Threats",
+            "refId": "B"
+          },
+          {
+            "expr": "idf:security_events_last_hour",
+            "legendFormat": "Security Events (1h)",
+            "refId": "C"
+          },
+          {
+            "expr": "idf:failed_logins_last_hour",
+            "legendFormat": "Failed Logins (1h)",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "green", "value": 90}
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Active Threats"},
+              "properties": [
+                {"id": "unit", "value": "short"},
+                {"id": "max", "value": 100},
+                {"id": "thresholds", "value": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 1},
+                    {"color": "red", "value": 5}
+                  ]
+                }}
+              ]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Security Events (1h)"},
+              "properties": [
+                {"id": "unit", "value": "short"},
+                {"id": "max", "value": 1000}
+              ]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Failed Logins (1h)"},
+              "properties": [
+                {"id": "unit", "value": "short"},
+                {"id": "max", "value": 500},
+                {"id": "thresholds", "value": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 10},
+                    {"color": "red", "value": 50}
+                  ]
+                }}
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "title": "Authentication Events",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+        "targets": [
+          {
+            "expr": "rate(idf_auth_login_attempts_total[5m])",
+            "legendFormat": "Login Attempts/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(idf_auth_login_failures_total[5m])",
+            "legendFormat": "Failed Logins/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(idf_auth_login_success_total[5m])",
+            "legendFormat": "Successful Logins/sec",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 10},
+                {"color": "red", "value": 50}
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Failed Logins/sec"},
+              "properties": [
+                {"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}
+              ]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Successful Logins/sec"},
+              "properties": [
+                {"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 3,
+        "title": "Suspicious Activities",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+        "targets": [
+          {
+            "expr": "rate(idf_security_suspicious_ip_total[5m])",
+            "legendFormat": "Suspicious IPs/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(idf_security_brute_force_attempts_total[5m])",
+            "legendFormat": "Brute Force Attempts/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(idf_security_unauthorized_access_total[5m])",
+            "legendFormat": "Unauthorized Access/sec",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "API Security Metrics",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14},
+        "targets": [
+          {
+            "expr": "rate(idf_api_requests_total{status_code!~\"2.*\"}[5m])",
+            "legendFormat": "Non-2xx Responses/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(idf_api_requests_total{status_code=\"401\"}[5m])",
+            "legendFormat": "401 Unauthorized/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(idf_api_requests_total{status_code=\"403\"}[5m])",
+            "legendFormat": "403 Forbidden/sec",
+            "refId": "C"
+          },
+          {
+            "expr": "rate(idf_api_requests_total{status_code=\"429\"}[5m])",
+            "legendFormat": "429 Rate Limited/sec",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "File Upload Security",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 14},
+        "targets": [
+          {
+            "expr": "rate(idf_file_upload_scanned_total[5m])",
+            "legendFormat": "Files Scanned/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(idf_file_upload_threats_detected_total[5m])",
+            "legendFormat": "Threats Detected/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(idf_file_upload_blocked_total[5m])",
+            "legendFormat": "Uploads Blocked/sec",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Threats Detected/sec"},
+              "properties": [
+                {"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}}
+              ]
+            },
+            {
+              "matcher": {"id": "byName", "options": "Uploads Blocked/sec"},
+              "properties": [
+                {"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}}
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 6,
+        "title": "Database Security",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 22},
+        "targets": [
+          {
+            "expr": "rate(idf_db_injection_attempts_total[5m])",
+            "legendFormat": "SQL Injection Attempts/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(idf_db_unauthorized_queries_total[5m])",
+            "legendFormat": "Unauthorized Queries/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(idf_db_privilege_escalation_attempts_total[5m])",
+            "legendFormat": "Privilege Escalation Attempts/sec",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Network Security",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 22},
+        "targets": [
+          {
+            "expr": "rate(idf_network_blocked_ips_total[5m])",
+            "legendFormat": "Blocked IPs/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(idf_network_ddos_attempts_total[5m])",
+            "legendFormat": "DDoS Attempts/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(idf_network_port_scans_total[5m])",
+            "legendFormat": "Port Scans/sec",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Top Attacking IPs",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 30},
+        "targets": [
+          {
+            "expr": "topk(10, sum by (source_ip) (rate(idf_security_events_total[1h])))",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "displayMode": "list",
+              "filterable": true,
+              "sortable": true
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Value"},
+              "properties": [
+                {"id": "unit", "value": "reqps"},
+                {"id": "displayName", "value": "Attack Rate"},
+                {"id": "thresholds", "value": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 0.1},
+                    {"color": "red", "value": 1}
+                  ]
+                }}
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 9,
+        "title": "Security Alerts Timeline",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 30},
+        "targets": [
+          {
+            "expr": "topk(20, sort_desc(idf_security_alert_timestamp))",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "displayMode": "list",
+              "filterable": true,
+              "sortable": true
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Value"},
+              "properties": [
+                {"id": "unit", "value": "dateTimeFromNow"},
+                {"id": "displayName", "value": "Time"}
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 10,
+        "title": "Compliance Status",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 38},
+        "targets": [
+          {
+            "expr": "idf:compliance_iso27001_score",
+            "legendFormat": "ISO 27001 Compliance",
+            "refId": "A"
+          },
+          {
+            "expr": "idf:compliance_gdpr_score",
+            "legendFormat": "GDPR Compliance",
+            "refId": "B"
+          },
+          {
+            "expr": "idf:compliance_idf_security_score",
+            "legendFormat": "IDF Security Standard",
+            "refId": "C"
+          },
+          {
+            "expr": "idf:audit_findings_critical",
+            "legendFormat": "Critical Findings",
+            "refId": "D"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {"color": "red", "value": 0},
+                {"color": "yellow", "value": 80},
+                {"color": "green", "value": 95}
+              ]
+            },
+            "min": 0,
+            "max": 100
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Critical Findings"},
+              "properties": [
+                {"id": "unit", "value": "short"},
+                {"id": "max", "value": 50},
+                {"id": "thresholds", "value": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 1},
+                    {"color": "red", "value": 5}
+                  ]
+                }}
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "severity",
+          "type": "query",
+          "query": "label_values(idf_security_events_total, severity)",
+          "refresh": 1,
+          "includeAll": true,
+          "allValue": ".*"
+        },
+        {
+          "name": "event_type",
+          "type": "query",
+          "query": "label_values(idf_security_events_total, event_type)",
+          "refresh": 1,
+          "includeAll": true,
+          "allValue": ".*"
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Security Incidents",
+          "datasource": "prometheus",
+          "expr": "idf_security_incident_created",
+          "textFormat": "{{severity}} security incident: {{description}}",
+          "titleFormat": "Security Incident",
+          "iconColor": "red"
+        },
+        {
+          "name": "Policy Updates",
+          "datasource": "prometheus",
+          "expr": "idf_security_policy_updated",
+          "textFormat": "Security policy updated: {{policy_name}}",
+          "titleFormat": "Policy Update",
+          "iconColor": "blue"
+        }
+      ]
+    }
+  }
+}

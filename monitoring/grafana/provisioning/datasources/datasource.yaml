@@ -1,0 +1,169 @@
+# IDF Testing Infrastructure - Grafana Datasource Provisioning
+# Automatic datasource configuration for comprehensive monitoring
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: "15s"
+      queryTimeout: "60s"
+      httpMethod: "POST"
+      customQueryParameters: ""
+      manageAlerts: true
+      prometheusType: "Prometheus"
+      prometheusVersion: "2.40.0"
+      cacheLevel: "High"
+      disableMetricsLookup: false
+      incrementalQuerying: true
+      disableRecordingRules: false
+      exemplarTraceIdDestinations:
+        - name: "traceID"
+          datasourceUid: "jaeger"
+    secureJsonData:
+      httpHeaderValue1: "Bearer ${PROMETHEUS_AUTH_TOKEN}"
+    httpHeaders:
+      Authorization: "Bearer ${PROMETHEUS_AUTH_TOKEN}"
+
+  - name: Jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686
+    uid: jaeger
+    editable: false
+    jsonData:
+      tracesToLogs:
+        datasourceUid: "loki"
+        tags: [
+          {
+            key: "service_name",
+            value: "service"
+          },
+          {
+            key: "trace_id",
+            value: "traceID"
+          }
+        ]
+        mappedTags: [
+          {
+            key: "service_name",
+            value: "service"
+          }
+        ]
+        mapTagNamesEnabled: true
+        spanStartTimeShift: "1h"
+        spanEndTimeShift: "1h"
+        filterByTraceID: true
+        filterBySpanID: true
+        lokiSearch: true
+      nodeGraph:
+        enabled: true
+      spanBar:
+        type: "Tag"
+        tag: "http.status_code"
+
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    uid: loki
+    editable: false
+    jsonData:
+      derivedFields:
+        - datasourceUid: "jaeger"
+          matcherRegex: "(?:trace_id|traceID)=([a-f0-9]+)"
+          name: "TraceID"
+          url: "$${__value.raw}"
+          urlDisplayLabel: "View Trace"
+      alertmanager:
+        handleGrafanaManagedAlerts: true
+        implementation: prometheus
+        url: http://alertmanager:9093
+
+  - name: Elasticsearch
+    type: elasticsearch
+    access: proxy
+    url: http://elasticsearch:9200
+    uid: elasticsearch
+    editable: false
+    database: "idf-logs-*"
+    jsonData:
+      interval: "Daily"
+      timeField: "@timestamp"
+      esVersion: "8.11.0"
+      maxConcurrentShardRequests: 5
+      logMessageField: "message"
+      logLevelField: "level"
+      includeFrozen: false
+      pipelineAggregations:
+        - text: "Date Histogram"
+          value: "date_histogram"
+        - text: "Terms"
+          value: "terms"
+        - text: "Percentiles"
+          value: "percentiles"
+        - text: "Extended Stats"
+          value: "extended_stats"
+        - text: "Min"
+          value: "min"
+        - text: "Max"
+          value: "max"
+        - text: "Average"
+          value: "avg"
+        - text: "Sum"
+          value: "sum"
+        - text: "Unique Count"
+          value: "cardinality"
+        - text: "Moving Average"
+          value: "moving_avg"
+        - text: "Derivative"
+          value: "derivative"
+        - text: "Bucket Script"
+          value: "bucket_script"
+        - text: "Serial Differencing"
+          value: "serial_diff"
+        - text: "Raw Document"
+          value: "raw_document"
+        - text: "Rate"
+          value: "rate"
+        - text: "Logs"
+          value: "logs"
+
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    uid: influxdb
+    editable: false
+    database: "idf_metrics"
+    user: "grafana"
+    secureJsonData:
+      password: "${INFLUXDB_PASSWORD}"
+    jsonData:
+      version: "InfluxQL"
+      timeInterval: "15s"
+      httpMode: "GET"
+      httpHeaders:
+        Authorization: "Token ${INFLUXDB_TOKEN}"
+
+  - name: AlertManager
+    type: alertmanager
+    access: proxy
+    url: http://alertmanager:9093
+    uid: alertmanager
+    editable: false
+    jsonData:
+      implementation: prometheus
+      handleGrafanaManagedAlerts: true
+      
+  - name: TestData
+    type: testdata
+    uid: testdata
+    editable: false
+    jsonData:
+      description: "Test data source for development and testing"

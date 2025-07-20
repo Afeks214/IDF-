@@ -15,14 +15,51 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.pool import QueuePool
-from sqlalchemy import event, text
+from sqlalchemy import event, text, update
 from sqlalchemy.engine import Engine
 import structlog
 from contextlib import asynccontextmanager
 
 from core.config import settings
+import time
+import asyncio
+from functools import wraps
+from typing import Any, Callable, Dict, List, Tuple
 
 logger = structlog.get_logger()
+
+# Performance monitoring decorator
+def monitor_query_performance(func: Callable) -> Callable:
+    """Decorator to monitor database query performance"""
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        start_time = time.time()
+        try:
+            result = await func(*args, **kwargs)
+            duration = time.time() - start_time
+            db_metrics.record_query_time(duration)
+            
+            if duration > 1.0:  # Log slow queries
+                logger.warning(
+                    "Slow query detected",
+                    function=func.__name__,
+                    duration=duration,
+                    args=str(args)[:200],
+                    kwargs=str(kwargs)[:200]
+                )
+            
+            return result
+        except Exception as e:
+            duration = time.time() - start_time
+            db_metrics.record_error()
+            logger.error(
+                "Database query failed",
+                function=func.__name__,
+                duration=duration,
+                error=str(e)
+            )
+            raise
+    return wrapper
 
 # Create the declarative base
 Base = declarative_base()
@@ -41,21 +78,28 @@ def create_engine_with_pool() -> AsyncEngine:
     # Engine configuration for performance
     engine_config = {
         "url": str(settings.DATABASE_URL),
-        "echo": settings.DB_ECHO,
+        "echo": getattr(settings, 'DB_ECHO', False),
         "future": True,
         "poolclass": QueuePool,
-        "pool_size": settings.DB_POOL_SIZE,
-        "max_overflow": settings.DB_MAX_OVERFLOW,
-        "pool_timeout": settings.DB_POOL_TIMEOUT,
-        "pool_recycle": settings.DB_POOL_RECYCLE,
+        "pool_size": getattr(settings, 'DB_POOL_SIZE', 20),
+        "max_overflow": getattr(settings, 'DB_MAX_OVERFLOW', 40),
+        "pool_timeout": getattr(settings, 'DB_POOL_TIMEOUT', 30),
+        "pool_recycle": getattr(settings, 'DB_POOL_RECYCLE', 3600),
         "pool_pre_ping": True,  # Verify connections before use
         "connect_args": {
             "server_settings": {
                 "jit": "off",  # Disable JIT for faster connection
                 "timezone": "UTC",
-                "statement_timeout": f"{settings.QUERY_TIMEOUT}s"
+                "statement_timeout": f"{getattr(settings, 'QUERY_TIMEOUT', 30)}s",
+                "shared_preload_libraries": "pg_stat_statements",
+                "log_statement": "all",
+                "log_min_duration_statement": "100",
+                "effective_cache_size": "1GB",
+                "shared_buffers": "256MB",
+                "work_mem": "4MB",
+                "maintenance_work_mem": "64MB"
             },
-            "command_timeout": settings.QUERY_TIMEOUT
+            "command_timeout": getattr(settings, 'QUERY_TIMEOUT', 30)
         }
     }
     
@@ -195,12 +239,14 @@ class DatabaseManager:
             "invalid": pool.invalid()
         }
     
+    @monitor_query_performance
     async def execute_query(self, query: str, params: dict = None) -> list:
         """Execute raw SQL query with parameters"""
         async with get_db_session() as session:
             result = await session.execute(text(query), params or {})
             return [dict(row) for row in result.fetchall()]
     
+    @monitor_query_performance
     async def bulk_insert(self, model_class, data_list: list) -> None:
         """Optimized bulk insert operation"""
         if not data_list:
@@ -210,6 +256,7 @@ class DatabaseManager:
             session.add_all([model_class(**data) for data in data_list])
             await session.commit()
     
+    @monitor_query_performance
     async def bulk_update(self, model_class, data_list: list, 
                          update_key: str = "id") -> None:
         """Optimized bulk update operation"""
@@ -225,6 +272,78 @@ class DatabaseManager:
                     .values(**data)
                 )
             await session.commit()
+    
+    @monitor_query_performance
+    async def search_hebrew_text(self, query: str, table_name: str, 
+                                fields: List[str], limit: int = 100) -> List[Dict]:
+        """Optimized Hebrew text search with full-text search capabilities"""
+        
+        # Create search vector for Hebrew text
+        search_conditions = []
+        for field in fields:
+            search_conditions.append(f"{field} ILIKE :query")
+        
+        where_clause = " OR ".join(search_conditions)
+        
+        sql_query = f"""
+        SELECT * FROM {table_name}
+        WHERE {where_clause}
+        ORDER BY 
+            CASE 
+                WHEN {fields[0]} = :exact_query THEN 1
+                WHEN {fields[0]} ILIKE :start_query THEN 2
+                ELSE 3
+            END,
+            created_at DESC
+        LIMIT :limit
+        """
+        
+        params = {
+            "query": f"%{query}%",
+            "exact_query": query,
+            "start_query": f"{query}%",
+            "limit": limit
+        }
+        
+        return await self.execute_query(sql_query, params)
+    
+    @monitor_query_performance
+    async def get_query_performance_stats(self) -> Dict[str, Any]:
+        """Get PostgreSQL query performance statistics"""
+        stats_query = """
+        SELECT 
+            query,
+            calls,
+            total_time,
+            rows,
+            100.0 * shared_blks_hit / nullif(shared_blks_hit + shared_blks_read, 0) AS hit_percent,
+            mean_time,
+            stddev_time,
+            max_time,
+            min_time
+        FROM pg_stat_statements 
+        WHERE query NOT LIKE '%pg_stat_statements%'
+        ORDER BY total_time DESC 
+        LIMIT 10;
+        """
+        
+        try:
+            return await self.execute_query(stats_query)
+        except Exception as e:
+            logger.warning("Could not retrieve query stats", error=str(e))
+            return []
+    
+    @monitor_query_performance
+    async def optimize_table_statistics(self, table_name: str) -> bool:
+        """Update table statistics for better query planning"""
+        try:
+            analyze_query = f"ANALYZE {table_name};"
+            await self.execute_query(analyze_query)
+            logger.info(f"Table statistics updated for {table_name}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update statistics for {table_name}", error=str(e))
+            return False
 
 
 # Global database manager instance
